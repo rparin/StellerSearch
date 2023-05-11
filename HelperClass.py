@@ -51,7 +51,7 @@ class Posting:
         for w in self._weights:
             wExists = True
             rStr += f'\n\t\t\t{w}:'
-            rStr += f' {self._weights[w]}'                
+            rStr += f' {self._weights[w]}'               
 
         if not wExists:
             rStr += ' None'
