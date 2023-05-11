@@ -11,6 +11,12 @@ class Posting:
     
     def addWeight(self, wType:str, pos:tuple) -> None:
         self.weights[wType].add(pos)
+
+    def __getitem__(self, key):
+        if key == 'positions':
+            return self.positions
+        if key == 'weights':
+            return self.weights
     
     def getToken(self) -> str:
         return self.tok
@@ -44,6 +50,9 @@ class InvertedIndex:
 
     def incDocId(self) -> None:
         self.idCount += 1
+
+    def __getitem__(self, key):
+        return self._index[key]
 
     def printDoc(self, docId:int) -> None:
         if not docId in self._index:
