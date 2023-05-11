@@ -32,9 +32,6 @@ class Posting:
 
         if not wExists:
             rStr += ' None'
-        else:
-            rStr += '\n'
-
         return rStr
 
 class InvertedIndex:
@@ -56,5 +53,4 @@ class InvertedIndex:
                 rStr += f'{self._index[docId][tok]}'
                 rStr += '\n'
         rStr += '\n'
-
         return rStr
