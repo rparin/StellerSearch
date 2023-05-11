@@ -45,6 +45,18 @@ class InvertedIndex:
     def incDocId(self) -> None:
         self.idCount += 1
 
+    def printDoc(self, docId:int) -> None:
+        if not docId in self._index:
+            print('Does not Exist')
+            return
+        
+        rStr = ''
+        rStr += f'DocId: {docId}\n'
+        for tok in self._index[docId]:
+            rStr += f'{self._index[docId][tok]}'
+            rStr += '\n'
+        print(rStr)
+
     def __repr__(self) -> str:
         rStr = ''
         for docId in self._index:
