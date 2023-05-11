@@ -38,7 +38,7 @@ class Document:
         self._postings = defaultdict(lambda: dict)
     
     #Setter functions
-    def addWeight(self, wType:str, pos:tuple) -> None:
+    def addWeight(self, wType:str, pos:int) -> None:
         self._weights[wType].add(pos)
     
     def addPosting(self, posting: Posting):
