@@ -9,8 +9,8 @@ class Posting:
     def addPosition(self, pos:int) -> None:
         self.positions.add(pos)
     
-    def addWeight(self, type:str, pos:tuple) -> None:
-        self.weights[type].add(pos)
+    def addWeight(self, wType:str, pos:tuple) -> None:
+        self.weights[wType].add(pos)
     
     def getToken(self) -> str:
         return self.tok
