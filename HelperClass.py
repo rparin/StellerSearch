@@ -1,7 +1,8 @@
 from collections import defaultdict
 
 class Posting:
-    def __init__(self) -> None:
+    def __init__(self, tok:str) -> None:
+        self.tok = tok
         self.positions = set()
         self.weights = defaultdict(lambda: set())
 
@@ -10,10 +11,13 @@ class Posting:
     
     def addWeight(self, type:str, pos:tuple) -> None:
         self.weights[type].add(pos)
+    
+    def getToken(self) -> str:
+        return self.tok
 
     def __repr__(self) -> str:
         wExists = False
-        rStr = '\t\tPositions:'
+        rStr = f'\tToken: {self.tok}\n\t\tPositions:'
         if len(self.positions) == 0:
             rStr += ' None'
         else:
@@ -38,8 +42,8 @@ class InvertedIndex:
         self._index = defaultdict(lambda: defaultdict(lambda: dict))
         self.idCount = 1
 
-    def addTokenPosting(self, token:str, posting: Posting) -> None:
-        self._index[self.idCount][token] = posting
+    def addTokenPosting(self,posting: Posting) -> None:
+        self._index[self.idCount][posting.getToken()] = posting
 
     def incDocId(self) -> None:
         self.idCount += 1
@@ -49,7 +53,6 @@ class InvertedIndex:
         for docId in self._index:
             rStr += f'DocId: {docId}\n'
             for tok in self._index[docId]:
-                rStr += f'\tToken: {tok}\n'
                 rStr += f'{self._index[docId][tok]}'
                 rStr += '\n'
         rStr += '\n'
