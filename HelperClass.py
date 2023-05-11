@@ -15,7 +15,7 @@ class Posting:
         return self._tok
 
     #Overload bracket operator to allow access of positions and weights
-    #Example: postingObj['positions'] or postingObj['weights']
+    #Example: postingObj['positions'] or postingObj['pos']
     def __getitem__(self, key):
         assert key == 'positions' or key == 'pos', f"{key} does NOT exist!"
         return self._positions
@@ -51,7 +51,7 @@ class Document:
     def getWeights(self):
         return self._weights
 
-    #Overload bracket operator to allow accessing inverted index doc and posting obj
+    #Overload bracket operator to allow accessing posting obj
     #Example: DocumentObj[tok:str]
     def __getitem__(self, key):
         assert key in self._postings, f"{key} Posting does NOT exist!"
