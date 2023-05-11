@@ -17,6 +17,17 @@ class Posting:
             return self._positions
         if key == 'weights':
             return self._weights
+        
+    def printWeights(self):
+        rStr = 'Weights:'
+        for w in self._weights:
+            wExists = True
+            rStr += f'\n\t{w}:'
+            rStr += f' {self._weights[w]}'                
+
+        if not wExists:
+            rStr += ' None'
+        print(rStr)
     
     def getToken(self) -> str:
         return self._tok
