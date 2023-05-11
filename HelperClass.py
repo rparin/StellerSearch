@@ -2,39 +2,39 @@ from collections import defaultdict
 
 class Posting:
     def __init__(self, tok:str) -> None:
-        self.tok = tok
-        self.positions = set()
-        self.weights = defaultdict(lambda: set())
+        self._tok = tok
+        self._positions = set()
+        self._weights = defaultdict(lambda: set())
 
     def addPosition(self, pos:int) -> None:
-        self.positions.add(pos)
+        self._positions.add(pos)
     
     def addWeight(self, wType:str, pos:tuple) -> None:
-        self.weights[wType].add(pos)
+        self._weights[wType].add(pos)
 
     def __getitem__(self, key):
         if key == 'positions':
-            return self.positions
+            return self._positions
         if key == 'weights':
-            return self.weights
+            return self._weights
     
     def getToken(self) -> str:
-        return self.tok
+        return self._tok
 
     def __repr__(self) -> str:
         wExists = False
-        rStr = f'\tToken: {self.tok}\n\t\tPositions:'
-        if len(self.positions) == 0:
+        rStr = f'\tToken: {self._tok}\n\t\tPositions:'
+        if len(self._positions) == 0:
             rStr += ' None'
         else:
-            rStr += f' {self.positions}'
+            rStr += f' {self._positions}'
         
         rStr += '\n\t\tWeights:'
 
-        for w in self.weights:
+        for w in self._weights:
             wExists = True
             rStr += f'\n\t\t\t{w}:'
-            rStr += f' {self.weights[w]}'                
+            rStr += f' {self._weights[w]}'                
 
         if not wExists:
             rStr += ' None'
@@ -43,13 +43,13 @@ class Posting:
 class InvertedIndex:
     def __init__(self) -> None:
         self._index = defaultdict(lambda: defaultdict(lambda: dict))
-        self.idCount = 1
+        self._idCount = 1
 
     def addTokenPosting(self,posting: Posting) -> None:
-        self._index[self.idCount][posting.getToken()] = posting
+        self._index[self._idCount][posting.getToken()] = posting
 
     def incDocId(self) -> None:
-        self.idCount += 1
+        self._idCount += 1
 
     def __getitem__(self, key):
         return self._index[key]
