@@ -101,3 +101,35 @@ class InvertedIndex:
         for docId in self._index:
             rStr += f'{self._index[docId]}\n'
         return rStr
+    
+class WeightFlags:
+    def __init__(self) -> None:
+        #Field not defined is considered normal weight
+        self._fields = {'title', 'header', 'footer',
+                       'h1','h2','h3','h4','h5','h6',
+                       's', #strikethrough
+                       'strike', #strikethrough
+                       'i', #italic
+                       'b','strong','em','a','article',
+                       'caption','nav','menu','cite'}
+        self._setFields = set()
+    
+    #Getters
+    def isWeight(self,field:str) -> bool:
+        return field in self._fields;
+
+    def getActiveFields(self) -> set():
+        if len(self._setFields) == 0:
+            return {'normal'}
+        return self._setFields
+
+    #Setters
+    def setField(self, field:str) -> None:
+        self._setFields.add(field)
+
+    def removeField(self, field:str) -> None:
+        self._setFields.remove(field)
+
+    def clearFields(self) -> None:
+        self._setFields.clear()
+        
