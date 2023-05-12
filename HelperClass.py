@@ -173,7 +173,6 @@ class HTMLTokenizer(HTMLParser):
                         self._doc.addWeight(field,self._pos)
 
                     self._pos += 1
-            print(data, self._weights.getActiveFields())
 
     def getDoc(self):
         return self._doc
