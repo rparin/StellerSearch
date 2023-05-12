@@ -177,3 +177,8 @@ class HTMLTokenizer(HTMLParser):
 
     def getDoc(self):
         return self._doc
+
+    def clear(self):
+        self._doc = Document(0)
+        self._pos = 1
+        self._weights.clearFields()
