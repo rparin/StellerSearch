@@ -1,5 +1,6 @@
 from collections import defaultdict
 from html.parser import HTMLParser
+import re
 
 #Posting is an object to hold token information for a single document
 class Posting:
@@ -51,11 +52,21 @@ class Document:
 
     def getWeights(self):
         return self._weights
+    
+    #Setter functions
+    def setDocId(self, docId:int):
+        self._docId = docId
+
+    def __setitem__(self, key, newValue):
+        if newValue != None:
+            self._postings[key] = newValue
 
     #Overload bracket operator to allow accessing posting obj
     #Example: DocumentObj[tok:str]
     def __getitem__(self, key):
-        assert key in self._postings, f"{key} Posting does NOT exist!"
+        #Add item if key does not exist
+        if key not in self._postings:
+            self._postings[key] = Posting(key)
         return self._postings[key]
     
     def printWeights(self, getStr = False) -> None | str:
@@ -138,6 +149,8 @@ class HTMLTokenizer(HTMLParser):
     def __init__(self, *, convert_charrefs: bool = True) -> None:
         super().__init__(convert_charrefs=convert_charrefs)
         self._weights = WeightFlags()
+        self._doc = Document(0)
+        self._pos = 1
 
     def handle_starttag(self, tag, attrs):
         if self._weights.isWeight(tag):
@@ -148,7 +161,19 @@ class HTMLTokenizer(HTMLParser):
             self._weights.removeField(tag)
 
     def handle_data(self, data):
-        if data.strip() != '':
-            #Call tokenizer on data
+        line = data.strip()
+        if line != '':
+            for token in re.split('[^a-z0-9]', line.lower()):
+                if (token != ''):
+                    #Create posting and add to doc
+                    self._doc[token].addPosition(self._pos)
+
+                    #Add weight and position to doc
+                    for field in self._weights.getActiveFields():
+                        self._doc.addWeight(field,self._pos)
+
+                    self._pos += 1
             print(data, self._weights.getActiveFields())
-        
+
+    def getDoc(self):
+        return self._doc
