@@ -1,4 +1,5 @@
 from collections import defaultdict
+from html.parser import HTMLParser
 
 #Posting is an object to hold token information for a single document
 class Posting:
@@ -132,4 +133,22 @@ class WeightFlags:
 
     def clearFields(self) -> None:
         self._setFields.clear()
+
+class HTMLTokenizer(HTMLParser):
+    def __init__(self, *, convert_charrefs: bool = True) -> None:
+        super().__init__(convert_charrefs=convert_charrefs)
+        self._weights = WeightFlags()
+
+    def handle_starttag(self, tag, attrs):
+        if self._weights.isWeight(tag):
+            self._weights.setField(tag)
+
+    def handle_endtag(self, tag):
+        if self._weights.isWeight(tag):
+            self._weights.removeField(tag)
+
+    def handle_data(self, data):
+        if data.strip() != '':
+            #Call tokenizer on data
+            print(data, self._weights.getActiveFields())
         
