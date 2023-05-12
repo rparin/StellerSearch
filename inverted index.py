@@ -5,7 +5,7 @@ from nltk.stem import PorterStemmer
 import json
 
 #inverted_index = defaultdict(list)
-inverted_index = collections.defaultdict(lambda: collections.defaultdict(dict))
+inverted_index = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(list)))
 
 stemmer = PorterStemmer()
 def preprocess_text(text):
@@ -18,7 +18,11 @@ def preprocess_text(text):
 
 def build_inverted_index(directory):
     file_num =0 
-    tag_weights = {'title': 3, 'h1': 2.5, 'h2': 2, 'h3': 1.5, 'b': 1, 'strong': 1} #tags' weight
+    doc_ids = {}
+    file_path = os.path.join(directory, "doc_ids.json")
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    #tag_weights = {'title': 3, 'h1': 2.5, 'h2': 2, 'h3': 1.5, 'b': 1, 'strong': 1} #tags' weight
     for subdir, dirs, files in os.walk(directory):
         for file in files:
             path = subdir.replace("\\", "//")
@@ -28,14 +32,14 @@ def build_inverted_index(directory):
                             data = json.load(f)
                     file_num += 1
                     doc_id = data['url']
+                    fileName="doc"+str(file_num)
+                    doc_ids[fileName] = doc_id
                     doc_content = data['content']
                     tokens = preprocess_text(doc_content)
                     #redefine
                     tokens_withtags = preprocess_text(doc_content)
-                    #positions = defaultdict(lambda: {"1": [],"1.33": [], "1.66": [],"2": []})
-
-
                     
+                    #positions = defaultdict(lambda: {"1": [],"1.33": [], "1.66": [],"2": []})
                     #tag postion
                     #tag_positions = collections.defaultdict(lambda: collections.defaultdict(list))
                     #for tag in tag_weights.keys():
@@ -47,14 +51,7 @@ def build_inverted_index(directory):
                             #tag_positions[tag].append((start_index, end_index))
 
                     #token postion
-                    list1=[]
                     for i, token in enumerate(tokens_withtags):
-                        if token not in list1:
-                            list1.append(token)
-                            inverted_index[token][doc_id]={"normal":[]}
-                        #fileName="doc"+str(file_num)
-                        #or url
-                        #inverted_index[token][doc_id].append(i)
                         if token in tokens:
                             count=0
                             #for k,v in tag_positions.items():
@@ -63,34 +60,35 @@ def build_inverted_index(directory):
                                         #if count==0: 
                                             #inverted_index[token][doc_id][k].append(i)
                                             #count+=1
-                            if count==0: 
-                                #if token not in inverted_index.keys():
-                                inverted_index[token][doc_id]["normal"].append(i)
-                                #else:
-                                    #inverted_index[token][doc_id]["normal"].append(i)
-                                #if token in inverted_index.keys():
-                                    #inverted_index[token][doc_id]["normal"].append(i)
-                                #else:
-                                    #inverted_index[token][doc_id]["normal"]=[i]
-                                #count+=1
-
-                                        
+                            if count==0:
+                                inverted_index[token][fileName]["normal"].append(i)
+                                #inverted_index[token][doc_id]["normal"].append(i)
+                                count+=1
                     
-                  
-                        
-                   
-                   
-                except Exception as e:
-                    print(str(e))
+                    #use this for enumerate dict built by Ralph
+                    #dict_token_tags_pair= tokonizer();
+                    #for token in dict_token_tags_pair.keys():
+                        #for tags in token.keys():
+                            #inverted_index[token][fileName][tags]=token[tags]
+                    
+                except :
+                    continue
  
-                    
+        
     #idf = {}
     #for token, posting in inverted_index.items():
         #idf[token] = math.log((file_num + 0.1) / (0.1+ len(posting)))+0.1
         #for i in range(len(posting)):
             #posting[i][2] = posting[i][2] * (idf[token])
-    print(file_num)
+    #print file number
+    print("total file: "+str(file_num))
+    #write doc id and url pair to local json
+    with open(file_path, "w") as f:
+        json.dump(doc_ids, f)
+    
     return inverted_index
+
+
 def load_index(url):
     with open(url, 'r') as f:
         return json.load(f)
