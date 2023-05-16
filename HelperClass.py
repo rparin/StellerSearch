@@ -9,10 +9,12 @@ class Posting:
         self._docId:int = docId
         self._positions = set()
         self._weights = defaultdict(lambda: set())
+        self._freq = 0
 
     #Setters functions
     def addPosition(self, pos:int) -> None:
         self._positions.add(pos)
+        self._freq = len(self._positions)
 
     def addWeight(self, wType:str, pos:int) -> None:
         self._weights[wType].add(pos)
@@ -22,7 +24,7 @@ class Posting:
         return self._docId
 
     def getFreq(self) -> int:
-        return len(self._positions)
+        return self._freq
     
     def printWeights(self, getStr = False) -> None | str:
         rStr = f'\t\tWeights:'
