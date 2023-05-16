@@ -22,3 +22,4 @@ def cleanHtml(html_content):
 def tokenizeHtml(docId:int, invIndex:InvertedIndex, htmlContent:str):
     parser = HTMLTokenizer(docId=1, invIndex=invIndex) #Create parser obj
     parser.feed(cleanHtml(htmlContent)) #pass in clean html to parse
+    invIndex.reCountTf() #Upate total freq

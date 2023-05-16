@@ -9,12 +9,10 @@ class Posting:
         self._docId:int = docId
         self._positions = set()
         self._weights = defaultdict(lambda: set())
-        self._freq = 0
 
     #Setters functions
     def addPosition(self, pos:int) -> None:
         self._positions.add(pos)
-        self._freq = len(self._positions)
 
     def addWeight(self, wType:str, pos:int) -> None:
         self._weights[wType].add(pos)
@@ -24,7 +22,7 @@ class Posting:
         return self._docId
 
     def getFreq(self) -> int:
-        return self._freq
+        return len(self._positions)
     
     def printWeights(self, getStr = False) -> None | str:
         rStr = f'\t\tWeights:'
@@ -104,6 +102,10 @@ class InvertedIndex:
     #Setter functions
     def addToken(self, token:Token) -> None:
         self._index[token.getToken()] = token
+
+    def reCountTf(self) -> int:
+        for token in self._index:
+            self._index[token].recountTf()
 
     #Getter functions
     def getTokenAmount(self) -> int:
