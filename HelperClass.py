@@ -71,6 +71,12 @@ class Token:
     def getPosting(self, docId:int) -> Posting:
         return self._postings[docId]
     
+    #Overload in operator 
+    #Example: if docId:int in TokenObj
+    #Check if token contains docId posting
+    def __contains__(self, docId:int) -> bool:
+        return docId in self._postings
+    
     def getTf(self) -> int:
         return self._totalFreq
     
@@ -189,9 +195,16 @@ class HTMLTokenizer(HTMLParser):
                         tempToken.addPosting(tempPost)
                         self._invIndex.addToken(tempToken)
 
+                    #Token exists but posting for document does not exist
+                    else:
+                        if self._docId not in self._invIndex[token]:
+                            tempPost = Posting(self._docId)
+                            self._invIndex[token].addPosting(tempPost)
+
                     #Update posting for given docId
                     #Add Position
                     self._invIndex[token][self._docId].addPosition(self._pos)
+                    
                     #Add Weight
                     for field in self._weights.getActiveFields():
                         self._invIndex[token][self._docId].addWeight(field,self._pos)
