@@ -1,7 +1,7 @@
 from collections import defaultdict
 from html.parser import HTMLParser
 import re
-
+from nltk.stem import PorterStemmer
 
 #Posting is an object to hold token information for a single document
 class Posting:
@@ -25,7 +25,7 @@ class Posting:
         return len(self._positions)
     
     def printWeights(self, getStr = False) -> None | str:
-        rStr = f'\t\tWeights:'
+        rStr = f'\t\tFields:'
         if len(self._weights) == 0:
             rStr += 'None\n'
         else:
@@ -173,6 +173,7 @@ class HTMLTokenizer(HTMLParser):
         self._invIndex = invIndex
         self._weights = WeightFlags()
         self._pos = 1
+        self.stemmer = PorterStemmer()
 
     def handle_starttag(self, tag, attrs):
         if self._weights.isWeight(tag):
@@ -185,8 +186,9 @@ class HTMLTokenizer(HTMLParser):
     def handle_data(self, data):
         line = data.strip()
         if line != '':
-            for token in re.split('[^a-z0-9]', line.lower()):
-                if (token != ''):
+            for aToken in re.split('[^a-z0-9]', line.lower()):
+                if (aToken != ''):
+                    token = self.stemmer.stem(aToken)
 
                     #create token, add posting using given docId
                     if token not in self._invIndex:
