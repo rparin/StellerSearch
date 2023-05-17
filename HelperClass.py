@@ -1,7 +1,8 @@
 from collections import defaultdict
 from html.parser import HTMLParser
-import re
 from nltk.stem import PorterStemmer
+import shelve
+import re
 
 #Posting is an object to hold token information for a single document
 class Posting:
@@ -53,6 +54,19 @@ class Posting:
         rStr += f'\n{self.printWeights(getStr=True)}'
         return rStr
     
+    def getFreqStr(self) -> str:
+        return f'{self.getDocId()}:{self.getFreq()};'
+
+    def getPosStr(self) -> str:
+        pStr = str(self._positions).strip('}').strip('{').replace(' ','')
+        if len(self._positions) != 0:
+            return f'{self.getDocId()}:{pStr};'
+        return ''
+
+    def getFieldStr(self) -> str:
+        wStr = str(dict(self._weights)).replace('}', '').replace('{','').replace(' ','').replace('\'','')
+        return f'{self.getDocId()}-{wStr};'
+    
 #Token is an object to hold a string, its total freq across all doc's and multiple Posting objects
 class Token:
     def __init__(self, tok:str) -> None:
@@ -98,6 +112,43 @@ class Token:
         for docId in self._postings:
             rStr += f'{self._postings[docId]}\n'
         return rStr
+    
+    def test(self):
+        for docId in self._postings:
+            print(docId)
+    
+    def write(self, filePath:str = 'Shelve') -> None:
+        for docId in self._postings:
+            postObj = self._postings[docId]
+            token = self.getToken()
+
+            #Store which document(s) token appears
+            with shelve.open(f'{filePath}/DocId', 'c') as shelf:
+                if token in shelf:
+                    shelf[token] += f',{docId}'
+                else:
+                    shelf[token] = f'{docId}'
+
+            #Store Token Freq
+            with shelve.open(f'{filePath}/Freq', 'c') as shelf:
+                if token in shelf:
+                    shelf[token] += postObj.getFreqStr()
+                else:
+                    shelf[token] = postObj.getFreqStr()
+
+            #Store Token Positions
+            with shelve.open(f'{filePath}/Pos', 'c') as shelf:
+                if token in shelf:
+                    shelf[token] += postObj.getPosStr()
+                else:
+                    shelf[token] = postObj.getPosStr()
+
+            #Store Token Fields
+            with shelve.open(f'{filePath}/Fields', 'c') as shelf:
+                if token in shelf:
+                    shelf[token] += postObj.getFieldStr()
+                else:
+                    shelf[token] = postObj.getFieldStr()
 
     
 #InvertedIndex is an object to hold multiple document objects
@@ -134,6 +185,10 @@ class InvertedIndex:
         for token in self._index:
             rStr += f'{self._index[token]}\n'
         return rStr
+    
+    def write(self, filePath:str = 'Shelve') -> None:
+        for token in self._index:
+            self._index[token].write(filePath)
     
 class WeightFlags:
     def __init__(self) -> None:
