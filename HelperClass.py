@@ -314,7 +314,6 @@ class ShelveDB():
             return int(shelf['totalDoc'])
         
     def readToken(self, token:str) -> None:
-        print(token)
         print(self.getPostId(token))
         print(self.getTokenFreq(token))
         print(self.getTokenPos(token))
