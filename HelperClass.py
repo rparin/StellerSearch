@@ -123,7 +123,7 @@ class Token:
             token = self.getToken()
 
             #Store which document(s) token appears
-            with shelve.open(f'{filePath}/DocId', 'c') as shelf:
+            with shelve.open(f'{filePath}/Postings', 'c') as shelf:
                 if token in shelf:
                     shelf[token] += f',{docId}'
                 else:
@@ -186,9 +186,14 @@ class InvertedIndex:
             rStr += f'{self._index[token]}\n'
         return rStr
     
+    #Write inverted index to multiple shelve files
     def write(self, filePath:str = 'Shelve') -> None:
         for token in self._index:
             self._index[token].write(filePath)
+
+    #Clear inverted index
+    def clear(self):
+        self._index.clear()
     
 class WeightFlags:
     def __init__(self) -> None:
