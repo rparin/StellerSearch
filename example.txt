@@ -1,0 +1,3 @@
+This is an example sentence.
+Another sentence for testing.
+Let's see how tokenization works!
