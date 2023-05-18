@@ -33,7 +33,7 @@ def getJsonData(filePath):
 
 
 def main() -> None:
-    rootDir = 'D:\\RJ\\UCI\\Ralph School\\2023 Spring\\CS 121\\Assignments\\.vscode\\Res\\DEV'
+    rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = []
     for root, dirs, files in os.walk(rootDir):
         for name in files:
