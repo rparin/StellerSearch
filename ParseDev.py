@@ -8,6 +8,10 @@ def writeDoc(docId:str, url:str):
     with shelve.open(f'DevShelve/DocId', 'c') as shelf:
         shelf[str(docId)] = url
 
+    docFile = open("DocId.txt", "a")
+    docFile.write(f'{docID}:{url}')
+    docFile.close()
+
 def getDocNum():
     with shelve.open(f'DevShelve/DocId', 'c') as shelf:
         if 'totalDoc' not in shelf:
