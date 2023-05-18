@@ -40,6 +40,7 @@ def main() -> None:
             if name.endswith((".json")):
                 full_path = os.path.join(root, name)
                 jsonFiles.append(full_path)
+    jsonFiles = jsonFiles[:200]
 
     invIndex = InvertedIndex() #Create inverted index to hold tokens from parser
     docId = getDocNum()
@@ -50,8 +51,8 @@ def main() -> None:
         tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
         invIndex.write('DevShelve')
         invIndex.clear()
-        writeDoc(docId, url)
-        storeDocNum(docId)
+        # writeDoc(docId, url)
+        # storeDocNum(docId)
         print(docId, url)
 
 if __name__ == "__main__":
