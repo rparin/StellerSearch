@@ -221,7 +221,8 @@ class WeightFlags:
         self._setFields.add(field)
 
     def removeField(self, field:str) -> None:
-        self._setFields.remove(field)
+        if field in self._setFields:
+            self._setFields.remove(field)
 
     def clearFields(self) -> None:
         self._setFields.clear()
