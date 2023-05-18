@@ -277,3 +277,39 @@ class HTMLTokenizer(HTMLParser):
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
+
+class ShelveDB():
+    def __init__(self, filePath:str = 'DevShelve') -> None:
+        self._filePath:str = filePath
+        self._files = {'postId':'Postings','freq':'Freq', 'pos':'Pos','fields':'Fields'}
+
+    def _getShelveItem(self, token:str, item:str) -> str:
+        with shelve.open(f'{self._filePath}/{item}', 'c') as shelf:
+            if token in shelf:
+                return shelf[token]
+            else:
+                return ''
+            
+    #Get which document(s) token appears        
+    def getPostId(self, token) -> str:
+        return self._getShelveItem(token, self._files['postId'])
+
+    #Get the frequency of token in document(s)        
+    def getTokenFreq(self, token:str) -> str:
+        return self._getShelveItem(token, self._files['freq'])
+    
+    #Get the position of token in document(s)  
+    def getTokenPos(self, token:str) -> str:
+        return self._getShelveItem(token, self._files['pos'])
+    
+    #Get the fields of token in document(s)  
+    def getTokenFields(self, token:str) -> str:
+        return self._getShelveItem(token, self._files['fields'])
+    
+    #Get the total number of documents in shelve file 
+    def getTotalDocNum(self) -> int:
+        with shelve.open(f'{self._filePath}/DocId', 'c') as shelf:
+            if 'totalDoc' not in shelf:
+                shelf['totalDoc'] = 0
+            return int(shelf['totalDoc'])
+    
