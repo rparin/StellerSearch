@@ -9,7 +9,7 @@ def writeDoc(docId:str, url:str):
         shelf[str(docId)] = url
 
     docFile = open("DocId.txt", "a")
-    docFile.write(f'{docID}:{url}')
+    docFile.write(f'{docId}:{url}')
     docFile.close()
 
 def getDocNum():
