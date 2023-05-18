@@ -49,7 +49,7 @@ def main() -> None:
         url, htmlContent = getJsonData(jFile)
         # Cleans and parses HTML content into tokens then adds it to Inverted index
         tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
-        invIndex.write('DevShelve')
+        # invIndex.write('DevShelve')
         invIndex.clear()
         # writeDoc(docId, url)
         # storeDocNum(docId)
