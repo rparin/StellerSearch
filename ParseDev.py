@@ -50,23 +50,20 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .105):
+    if fileSize + ramUsedGb >= (totalRam * .11):
         return False
     return True
 
-def isMemoryFull(limit=10.5):
+def isMemoryFull(limit=11):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
     return False
 
-def writeData(invIndex, dList, docId, count):
+def writeData(invIndex, docId, count):
     invIndex.write('DevHDF5', count)
     invIndex.clear()
-    for dItem in dList:
-        writeDoc(dItem[0], dItem[1])
     storeDocNum(docId)
-    dList.clear()
     print("----Wrote Data to File----")
 
 def getJsonFiles(rootDir):
@@ -86,13 +83,12 @@ def main() -> None:
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
     docId = 0
-    dList = []
     count = 1
     for jFile in jsonFiles:
         if not isValidJsonSize(jFile):
-            writeData(invIndex, dList, docId, count)
+            writeData(invIndex, docId, count)
             count += 1
-
+        
         #Dont Load json file
         if not isValidJsonSize(jFile):
             docFile = open("InvalidJson.txt", "a")
@@ -108,15 +104,14 @@ def main() -> None:
             else:
                 # Cleans and parses HTML content into tokens then adds it to Inverted index
                 tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
-                dList.append((docId,url))
                 print(docId, url)
 
                 if isMemoryFull():
-                    writeData(invIndex, dList, docId, count)
+                    writeData(invIndex, docId, count)
                     count += 1
 
     if docId != getDocNum():
-        writeData(invIndex, dList, docId, count)
+        writeData(invIndex, docId, count)
         count += 1
 
 def test() -> None:
