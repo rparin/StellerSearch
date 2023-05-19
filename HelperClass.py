@@ -37,7 +37,7 @@ class Token:
     def getAllDocId(self) -> set:
         return self._docId
     
-    def getAllWeights(self) -> dict:
+    def getAllFields(self) -> dict:
         return dict(self._weights)
     
     def __getitem__(self, postType:str) -> dict:
@@ -50,7 +50,12 @@ class Token:
             return self._weights
     
     #Setters
-    def setWeights(self, weights:dict) -> None:
+    def addToken(self, token) -> None:
+        self._positions.update(token.getAllPos())
+        self._weights.update(token.getAllFields())
+        self._docId.update(token.getAllDocId())
+
+    def setFields(self, weights:dict) -> None:
         self._weights = defaultdict(dict, weights)
 
     def setPos(self, pos:dict) -> None:
@@ -67,18 +72,33 @@ class Token:
         return rStr
     
     def write(self, filePath:str = 'Shelve') -> None:
-        pass
-        # for docId in self._postings:
-        #     postObj = self._postings[docId]
-        #     token = self.getToken()
 
-        #     #Store which document(s) token appears
-        #     with shelve.open(f'{filePath}/Postings', 'c') as shelf:
-        #         if token in shelf:
-        #             shelf[token] += f',{docId}'
-        #         else:
-        #             shelf[token] = f'{docId}'
+        #Write Term Positions do shelve 
+        with shelve.open(f'{filePath}/Pos', 'c') as shelf:
+            if self._tok not in shelf:
+                shelf[self._tok] = self.getAllPos()
+            else:
+                tempDict = dict(shelf[self._tok])
+                (tempDict).update(self.getAllPos())
+                shelf[self._tok] = tempDict
 
+        #Write DocId do shelve 
+        with shelve.open(f'{filePath}/DocId', 'c') as shelf:
+            if self._tok not in shelf:
+                shelf[self._tok] = self.getAllDocId()
+            else:
+                tempSet = set(shelf[self._tok])
+                (tempSet).update(self.getAllDocId())
+                shelf[self._tok] = tempSet
+        
+        #Write Fields to shelve 
+        with shelve.open(f'{filePath}/Fields', 'c') as shelf:
+            if self._tok not in shelf:
+                shelf[self._tok] = self.getAllFields()
+            else:
+                tempDict = set(shelf[self._tok])
+                (tempDict).update(self.getAllFields())
+                shelf[self._tok] = tempDict
     
 #InvertedIndex is an object to hold multiple document objects
 class InvertedIndex:
@@ -87,7 +107,10 @@ class InvertedIndex:
 
     #Setter functions
     def addToken(self, token:Token) -> None:
-        self._index[token.getToken()] = token
+        if token.getToken() in self._index:
+            self._index[token.getToken()].addToken(token)
+        else:
+            self._index[token.getToken()] = token
 
     #Getter functions
     def getTokenAmount(self) -> int:
