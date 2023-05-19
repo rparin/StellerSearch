@@ -2,7 +2,7 @@ import os
 import psutil
 import json
 import shelve
-from HelperClass import InvertedIndex, Token
+from HelperClass import InvertedIndex
 from helper import tokenizeHtml
 
 def writeDoc(docId:str, url:str):
