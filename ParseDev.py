@@ -36,9 +36,14 @@ def getDocUrl(docId:int):
 def getJsonData(filePath):
     jFile = open(filePath)
     data = json.load(jFile)
+    enc = data['encoding']
+    jFile.close()
+    data = ''
+    jFile = open(filePath, encoding=enc)
+    data = json.load(jFile)
+    jFile.close()
     url = data['url']
     htmlContent = data['content']
-    jFile.close()
     return (url, htmlContent)
 
 def isValidJsonSize(file):
@@ -64,15 +69,19 @@ def writeData(invIndex, dList, docId):
     dList.clear()
     print("----Wrote Data to File----")
 
-
-def main() -> None:
-    rootDir = '/home/rparin/CS121/HW3/DEV'
+def getJsonFiles(rootDir):
     jsonFiles = []
     for root, dirs, files in os.walk(rootDir):
         for name in files:
             if name.endswith((".json")):
                 full_path = os.path.join(root, name)
                 jsonFiles.append(full_path)
+    return jsonFiles
+
+
+def main() -> None:
+    rootDir = '/home/rparin/CS121/HW3/DEV'
+    jsonFiles = getJsonFiles(rootDir)
 
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
@@ -106,6 +115,17 @@ def main() -> None:
     if docId != getDocNum():
         writeData(invIndex, dList, docId)
 
+def test() -> None:
+    rootDir = '/home/rparin/CS121/HW3/DEV'
+    jsonFiles = getJsonFiles(rootDir)
+
+    docId = 1300
+    url, htmlContent = getJsonData(jsonFiles[docId-1])
+    print(url)
+    invIndex = InvertedIndex() #Create inverted index to hold tokens from parser
+    tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
+    print(invIndex)
+
 if __name__ == "__main__":
-    main()
+    test()
 
