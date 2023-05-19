@@ -10,7 +10,6 @@ class Token:
         self._tok:str = tok
         self._positions = defaultdict(lambda: set())
         self._weights = defaultdict(lambda: dict)
-        self._docId = set()
 
     def addPosition(self, docId: int, pos:int):
         self._positions[docId].add(pos)
@@ -23,9 +22,6 @@ class Token:
                 self._weights[docId][field] = {pos}
         else:
             self._weights[docId] = {field:{pos}}
-        
-    def addDoc(self, docId:int):
-        self._docId.add(docId)
 
     #Getter functions
     def getToken(self) -> str:
@@ -33,9 +29,6 @@ class Token:
     
     def getAllPos(self) -> dict:
         return dict(self._positions)
-    
-    def getAllDocId(self) -> set:
-        return self._docId
     
     def getAllFields(self) -> dict:
         return dict(self._weights)
@@ -53,12 +46,11 @@ class Token:
     def addToken(self, token) -> None:
         self._positions.update(token.getAllPos())
         self._weights.update(token.getAllFields())
-        self._docId.update(token.getAllDocId())
     
     #Overload print function to print obj info
     def __repr__(self) -> str:
         rStr = f'Token: {self._tok}'
-        for docId in self.getAllDocId():
+        for docId in self._positions:
             rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
         return rStr
     
@@ -202,12 +194,7 @@ class HTMLTokenizer(HTMLParser):
                     #create token if not in index
                     if token not in self._invIndex:
                         tempToken = Token(token)
-                        tempToken.addDoc(self._docId)
                         self._invIndex.addToken(tempToken)
-                    else:
-                        #Add docId to token if not already in there
-                        if self._docId not in self._invIndex[token].getAllDocId():
-                            self._invIndex[token].addDoc(self._docId)
 
                     #Add Position for given docId
                     self._invIndex[token].addPosition(self._docId, self._pos)
