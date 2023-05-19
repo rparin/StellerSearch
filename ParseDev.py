@@ -131,5 +131,5 @@ def test() -> None:
     print(invIndex)
 
 if __name__ == "__main__":
-    test()
+    main()
 
