@@ -66,7 +66,7 @@ def writeData(invIndex, dList, docId):
 
 
 def main() -> None:
-    rootDir = 'Location to Dev Folder'
+    rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = []
     for root, dirs, files in os.walk(rootDir):
         for name in files:
