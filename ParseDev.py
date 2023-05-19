@@ -116,7 +116,7 @@ def main() -> None:
         writeData(invIndex, dList, docId)
 
 def test() -> None:
-    rootDir = '/home/rparin/CS121/HW3/DEV'
+    rootDir = 'D:\\RJ\\UCI\\Ralph School\\2023 Spring\\CS 121\\Assignments\\.vscode\\Res\\DEV'
     jsonFiles = getJsonFiles(rootDir)
 
     docId = 1300
