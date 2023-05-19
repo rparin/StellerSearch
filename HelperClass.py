@@ -3,10 +3,9 @@ from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 import pandas as pd
 import re
-import warnings
-from tables import NaturalNameWarning
-warnings.filterwarnings('ignore', category=NaturalNameWarning)
-import pyarrow.feather as feather
+# import warnings
+# from tables import NaturalNameWarning
+# warnings.filterwarnings('ignore', category=NaturalNameWarning)
 
 def _df_from_dict(dictObj:dict, toInt = False):
     df = pd.DataFrame.from_dict(dictObj, orient='index')
