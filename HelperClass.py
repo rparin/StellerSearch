@@ -3,9 +3,6 @@ from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 import pandas as pd
 import re
-# import warnings
-# from tables import NaturalNameWarning
-# warnings.filterwarnings('ignore', category=NaturalNameWarning)
 
 def _df_from_dict(dictObj:dict, toInt = False):
     df = pd.DataFrame.from_dict(dictObj, orient='index')
@@ -24,37 +21,52 @@ def _join_df_col(df1,df2):
     df3 = df1.merge(df2)
     df3.fillna(0, inplace=True)
     return df3.astype('int32')
-
-#Posting is an object that holds the term and info about that term for multiple documents
-class Token:
-    def __init__(self, tok:str) -> None:
-        self._tok:str = tok
-        self._positions = defaultdict(lambda: set())
-        self._weights = defaultdict(lambda: dict)
-
-    def addPosition(self, docId: int, pos:int):
-        self._positions[docId].add(pos)
     
-    def addWeight(self, docId:int, field:str, pos:int):
-        if docId in self._weights:
-            if field in self._weights[docId]:
-                self._weights[docId][field].add(pos)
-            else:
-                self._weights[docId][field] = {pos}
-        else:
-            self._weights[docId] = {field:{pos}}
+#InvertedIndex is an object to hold term posting information
+class InvertedIndex:
+    def __init__(self) -> None:
+        self._positions = {}
+        self._weights = {}
 
+    def addPosition(self, term:str, docId: int, pos:int):
+        if term in self._positions:
+            if docId in self._positions[term]:
+                self._positions[term][docId].add(pos)
+            else:
+                self._positions[term].update({docId: {pos}})
+        else:
+            self._positions[term] = {docId:{pos}}
+            
+    def addWeight(self, term:str, docId:int, field:str, pos:int):
+        if term in self._weights:
+            if docId in self._weights[term]:
+                if field in self._weights[term][docId]:
+                    self._weights[term][docId][field].add(pos)
+                else:
+                    self._weights[term][docId][field] = {pos}
+            else:
+                self._weights[term].update({docId:{field:{pos}}})
+        else:
+            self._weights[term] = {docId:{field:{pos}}}
+        
     #Getter functions
-    def getToken(self) -> str:
-        return self._tok
+    def getTokenAmount(self) -> int:
+        return len(self._positions)
     
     def getAllPos(self) -> dict:
-        return dict(self._positions)
+        return self._positions
     
     def getAllFields(self) -> dict:
-        return dict(self._weights)
+        return self._weights
     
-    def __getitem__(self, postType:str) -> dict:
+    #Overload in operator 
+    #Example: if token:str in InvertedIndexObj
+    def __contains__(self, token:str) -> bool:
+        return token in self._positions
+
+    #Overload bracket operator to allow accessing inverted index doc and posting obj
+    #Example: InvertedIndexObj[token:str]
+    def __getitem__(self, postType:str):
         assert postType == 'pos' or postType == 'field', f"Token info '{postType}' does NOT exist!"
         
         if postType == 'pos':
@@ -62,88 +74,25 @@ class Token:
         
         if postType == 'field':
             return self._weights
-    
-    #Setters
-    def addToken(self, token) -> None:
-        self._positions.update(token.getAllPos())
-        self._weights.update(token.getAllFields())
-    
-    #Overload print function to print obj info
-    def __repr__(self) -> str:
-        rStr = f'Token: {self._tok}'
-        for docId in self._positions:
-            rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
-        return rStr
-    
-    def write(self, filePath:str = 'DevHDF5') -> None:
-        fPath = filePath+'/Pos.hdf5'
-        store = pd.HDFStore(fPath,mode='a')
-        inStore = self._tok in store
-        store.close()
-
-        #Token already in file
-        if inStore:
-            oldDf = pd.read_hdf(fPath, self._tok, mode='r')
-            oldDict = _dict_from_df(oldDf)
-            self._positions.update(oldDict)
-
-        #Convert Token pos to df
-        df = _df_from_dict(self.getAllPos())
-        df.to_hdf(fPath, key=self._tok)
-    
-#InvertedIndex is an object to hold multiple document objects
-class InvertedIndex:
-    def __init__(self) -> None:
-        self._index = defaultdict(lambda: dict)
-
-    #Setter functions
-    def addToken(self, token:Token) -> None:
-        if token.getToken() in self._index:
-            self._index[token.getToken()].addToken(token)
-        else:
-            self._index[token.getToken()] = token
-
-    #Getter functions
-    def getTokenAmount(self) -> int:
-        return len(self._index)
-    
-    #Overload in operator 
-    #Example: if token:str in InvertedIndexObj
-    def __contains__(self, token:str) -> bool:
-        return token in self._index
-
-    #Overload bracket operator to allow accessing inverted index doc and posting obj
-    #Example: InvertedIndexObj[token:str]
-    def __getitem__(self, tok):
-        assert tok in self._index, f"Token '{tok}' does NOT exist!"
-        return self._index[tok]
 
     #Overload print function to print obj info
     def __repr__(self) -> str:
-        rStr = f'Total Tokens: {self.getTokenAmount()}\n'
-        for token in self._index:
-            rStr += f'{self._index[token]}\n\n'
+        rStr = f'Total Tokens: {self.getTokenAmount()}'
+        for token in self.getAllPos():
+            rStr += f'\nToken: {token}'
+            for docId in self.getAllPos()[token]:
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
     #Write inverted index to multiple shelve files
     def write(self, filePath:str = 'DevHDF5', count:int = 1) -> None:
-        #Write Terms
-        # for token in self._index:
-        #     self._index[token].write(filePath)
-
-        #Create Index pos dict
-        posIndex = defaultdict(lambda: dict)
-        wIndex = defaultdict(lambda: dict)
-        for token in self._index:
-            posIndex[token] = self._index[token].getAllPos()
-            wIndex[token] = self._index[token].getAllFields()
 
         #Write pos index to file using Pos{count} as key
-        df = _df_from_dict(dict(posIndex))
+        df = _df_from_dict(self.getAllPos())
         df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
-        df = _df_from_dict(dict(wIndex))
+        df = _df_from_dict(self.getAllFields())
         df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
 
     #Clear inverted index
@@ -206,17 +155,12 @@ class HTMLTokenizer(HTMLParser):
                 if (aToken != ''):
                     token = self.stemmer.stem(aToken)
 
-                    #create token if not in index
-                    if token not in self._invIndex:
-                        tempToken = Token(token)
-                        self._invIndex.addToken(tempToken)
-
                     #Add Position for given docId
-                    self._invIndex[token].addPosition(self._docId, self._pos)
+                    self._invIndex.addPosition(token, self._docId, self._pos)
                     
                     #Add Weight
                     for field in self._weights.getActiveFields():
-                        self._invIndex[token].addWeight(self._docId, field, self._pos)
+                        self._invIndex.addWeight(token, self._docId, field, self._pos)
 
                     self._pos += 1
 

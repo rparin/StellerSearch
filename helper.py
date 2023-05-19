@@ -1,6 +1,6 @@
 from bs4 import UnicodeDammit
 from lxml.html.clean import Cleaner
-from HelperClass import InvertedIndex, HTMLTokenizer, Token
+from HelperClass import InvertedIndex, HTMLTokenizer
 
 #Decode html string
 #Cite: https://lxml.de/elementsoup.html
