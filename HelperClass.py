@@ -78,7 +78,7 @@ class Token:
             if self._tok not in shelf:
                 shelf[self._tok] = self.getAllPos()
             else:
-                tempDict = dict(shelf[self._tok])
+                tempDict = shelf[self._tok]
                 (tempDict).update(self.getAllPos())
                 shelf[self._tok] = tempDict
 
@@ -87,7 +87,7 @@ class Token:
             if self._tok not in shelf:
                 shelf[self._tok] = self.getAllDocId()
             else:
-                tempSet = set(shelf[self._tok])
+                tempSet = shelf[self._tok]
                 (tempSet).update(self.getAllDocId())
                 shelf[self._tok] = tempSet
         
@@ -96,9 +96,19 @@ class Token:
             if self._tok not in shelf:
                 shelf[self._tok] = self.getAllFields()
             else:
-                tempDict = set(shelf[self._tok])
+                tempDict = shelf[self._tok]
                 (tempDict).update(self.getAllFields())
                 shelf[self._tok] = tempDict
+
+    def _readShelve(self,filePath, token, fType):
+        with shelve.open(f'{filePath}/{fType}', 'c') as shelf:
+            return shelf[token]
+    
+    def readShelve(self, filePath, token):
+        self._tok:str = token
+        self._positions = defaultdict(set, self._readShelve(filePath, token, 'Pos'))
+        self._weights = defaultdict(dict, self._readShelve(filePath, token, 'Fields'))
+        self._docId = self._readShelve(filePath, token, 'DocId')
     
 #InvertedIndex is an object to hold multiple document objects
 class InvertedIndex:
