@@ -68,7 +68,8 @@ class Token:
     def __repr__(self) -> str:
         rStr = f'Token: {self._tok}'
         for docId in self.getAllDocId():
-            rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
+            # rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
+            rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}'
         return rStr
     
     def write(self, filePath:str = 'Shelve') -> None:
@@ -83,22 +84,22 @@ class Token:
                 shelf[self._tok] = tempDict
 
         #Write DocId do shelve 
-        with shelve.open(f'{filePath}/DocId', 'c') as shelf:
-            if self._tok not in shelf:
-                shelf[self._tok] = self.getAllDocId()
-            else:
-                tempSet = set(shelf[self._tok])
-                (tempSet).update(self.getAllDocId())
-                shelf[self._tok] = tempSet
+        # with shelve.open(f'{filePath}/DocId', 'c') as shelf:
+        #     if self._tok not in shelf:
+        #         shelf[self._tok] = self.getAllDocId()
+        #     else:
+        #         tempSet = set(shelf[self._tok])
+        #         (tempSet).update(self.getAllDocId())
+        #         shelf[self._tok] = tempSet
         
         #Write Fields to shelve 
-        with shelve.open(f'{filePath}/Fields', 'c') as shelf:
-            if self._tok not in shelf:
-                shelf[self._tok] = self.getAllFields()
-            else:
-                tempDict = shelf[self._tok]
-                (tempDict).update(self.getAllFields())
-                shelf[self._tok] = tempDict
+        # with shelve.open(f'{filePath}/Fields', 'c') as shelf:
+        #     if self._tok not in shelf:
+        #         shelf[self._tok] = self.getAllFields()
+        #     else:
+        #         tempDict = shelf[self._tok]
+        #         (tempDict).update(self.getAllFields())
+        #         shelf[self._tok] = tempDict
 
     def _readShelve(self,filePath, fType):
         with shelve.open(f'{filePath}/{fType}', 'c') as shelf:
@@ -222,8 +223,8 @@ class HTMLTokenizer(HTMLParser):
                     self._invIndex[token].addPosition(self._docId, self._pos)
                     
                     #Add Weight
-                    for field in self._weights.getActiveFields():
-                        self._invIndex[token].addWeight(self._docId, field, self._pos)
+                    # for field in self._weights.getActiveFields():
+                    #     self._invIndex[token].addWeight(self._docId, field, self._pos)
 
                     self._pos += 1
 
