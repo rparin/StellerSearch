@@ -1,8 +1,30 @@
 from collections import defaultdict
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
-import shelve
+import pandas as pd
 import re
+import warnings
+from tables import NaturalNameWarning
+warnings.filterwarnings('ignore', category=NaturalNameWarning)
+import pyarrow.feather as feather
+
+def _df_from_dict(dictObj:dict, toInt = False):
+    df = pd.DataFrame.from_dict(dictObj, orient='index')
+    df.fillna(0, inplace=True)
+    if toInt: df = df.astype('int32')
+    return df.transpose()
+
+#Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
+def _dict_from_df(df) -> dict:
+    df = df.transpose()
+    series_set = df.apply(frozenset, axis=1)
+    new_df = series_set.apply(lambda a: set(a))
+    return dict(new_df)
+
+def _join_df_col(df1,df2):
+    df3 = df1.merge(df2)
+    df3.fillna(0, inplace=True)
+    return df3.astype('int32')
 
 #Posting is an object that holds the term and info about that term for multiple documents
 class Token:
@@ -54,43 +76,21 @@ class Token:
             rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
         return rStr
     
-    def write(self, filePath:str = 'Shelve') -> None:
+    def write(self, filePath:str = 'DevHDF5') -> None:
+        fPath = filePath+'/Pos.hdf5'
+        store = pd.HDFStore(fPath,mode='a')
+        inStore = self._tok in store
+        store.close()
 
-        #Write Term Positions do shelve 
-        with shelve.open(f'{filePath}/Pos', 'c') as shelf:
-            if self._tok not in shelf:
-                shelf[self._tok] = self.getAllPos()
-            else:
-                tempDict = shelf[self._tok]
-                (tempDict).update(self.getAllPos())
-                shelf[self._tok] = tempDict
+        #Token already in file
+        if inStore:
+            oldDf = pd.read_hdf(fPath, self._tok, mode='r')
+            oldDict = _dict_from_df(oldDf)
+            self._positions.update(oldDict)
 
-        #Write DocId do shelve 
-        with shelve.open(f'{filePath}/DocId', 'c') as shelf:
-            if self._tok not in shelf:
-                shelf[self._tok] = self.getAllDocId()
-            else:
-                tempSet = set(shelf[self._tok])
-                (tempSet).update(self.getAllDocId())
-                shelf[self._tok] = tempSet
-        
-        #Write Fields to shelve 
-        with shelve.open(f'{filePath}/Fields', 'c') as shelf:
-            if self._tok not in shelf:
-                shelf[self._tok] = self.getAllFields()
-            else:
-                tempDict = shelf[self._tok]
-                (tempDict).update(self.getAllFields())
-                shelf[self._tok] = tempDict
-
-    def _readShelve(self,filePath, fType):
-        with shelve.open(f'{filePath}/{fType}', 'c') as shelf:
-            return shelf[self._tok]
-    
-    def readShelve(self, filePath):
-        self._positions = defaultdict(set, self._readShelve(filePath, 'Pos'))
-        self._weights = defaultdict(dict, self._readShelve(filePath, 'Fields'))
-        self._docId = self._readShelve(filePath, 'DocId')
+        #Convert Token pos to df
+        df = _df_from_dict(self.getAllPos())
+        df.to_hdf(fPath, key=self._tok)
     
 #InvertedIndex is an object to hold multiple document objects
 class InvertedIndex:
@@ -112,7 +112,7 @@ class InvertedIndex:
     #Example: if token:str in InvertedIndexObj
     def __contains__(self, token:str) -> bool:
         return token in self._index
-        
+
     #Overload bracket operator to allow accessing inverted index doc and posting obj
     #Example: InvertedIndexObj[token:str]
     def __getitem__(self, tok):
@@ -127,9 +127,25 @@ class InvertedIndex:
         return rStr
     
     #Write inverted index to multiple shelve files
-    def write(self, filePath:str = 'Shelve') -> None:
+    def write(self, filePath:str = 'DevHDF5', count:int = 1) -> None:
+        #Write Terms
+        # for token in self._index:
+        #     self._index[token].write(filePath)
+
+        #Create Index pos dict
+        posIndex = defaultdict(lambda: dict)
+        wIndex = defaultdict(lambda: dict)
         for token in self._index:
-            self._index[token].write(filePath)
+            posIndex[token] = self._index[token].getAllPos()
+            wIndex[token] = self._index[token].getAllFields()
+
+        #Write pos index to file using Pos{count} as key
+        df = _df_from_dict(dict(posIndex))
+        df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+
+        #Write field index to file using fields{count} as key
+        df = _df_from_dict(dict(wIndex))
+        df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
 
     #Clear inverted index
     def clear(self):

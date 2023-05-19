@@ -1,4 +1,3 @@
-import pandas as pd
 from bs4 import UnicodeDammit
 from lxml.html.clean import Cleaner
 from HelperClass import InvertedIndex, HTMLTokenizer, Token
@@ -32,21 +31,3 @@ def tokenizeHtml(docId:int, invIndex:InvertedIndex, htmlContent:str):
     clean_html = cleanHtml(htmlContent)
     if clean_html:
         parser.feed(clean_html) #pass in clean html to parse
-
-def df_from_dict(token:Token):
-    df = pd.DataFrame.from_dict(token.getAllPos(), orient='index')
-    df.fillna(0, inplace=True)
-    df = df.astype('int32')
-    return df.transpose()
-
-#Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
-def dict_from_df(df) -> dict:
-    df = df.transpose()
-    series_set = df.apply(frozenset, axis=1)
-    new_df = series_set.apply(lambda a: set(a))
-    return dict(new_df)
-
-def join_df_col(df1,df2):
-    df3 = df1.join(df2)
-    df3.fillna(0, inplace=True)
-    return df3.astype('int32')
