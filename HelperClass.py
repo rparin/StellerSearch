@@ -116,7 +116,7 @@ class WeightFlags:
     
     #Getters
     def isWeight(self,field:str) -> bool:
-        return field in self._fields;
+        return field in self._fields
 
     def getActiveFields(self) -> set():
         if len(self._setFields) == 0:
