@@ -79,7 +79,6 @@ def main() -> None:
     docId = 0
     dList = []
     for jFile in jsonFiles:
-        docId += 1
         if not isValidJsonSize(jFile):
             writeData(invIndex, dList, docId)
 
@@ -88,8 +87,8 @@ def main() -> None:
             docFile = open("InvalidJson.txt", "a")
             docFile.write(f'{docId}:{url}\n')
             docFile.close()
-            docId -= 1
         else:
+            docId += 1
             url, htmlContent = getJsonData(jFile)
 
             #Check if already parsed
