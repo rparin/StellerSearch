@@ -88,16 +88,19 @@ class InvertedIndex:
     def write(self, filePath:str = 'DevHDF5', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        df = _df_from_dict(self.getAllPos())
+        df = _df_from_dict(self._positions)
+        self._positions.clear()
         df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
-        df = _df_from_dict(self.getAllFields())
+        df = _df_from_dict(self._weights)
+        self._weights.clear()
         df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
 
     #Clear inverted index
     def clear(self):
-        self._index.clear()
+        self._positions.clear()
+        self._weights.clear()
     
 class WeightFlags:
     def __init__(self) -> None:
