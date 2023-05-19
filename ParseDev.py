@@ -28,6 +28,7 @@ def readDocShelve(key):
         return shelf[key]
 
 def getDocUrl(docId:int):
+    return 'a'
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
         if str(docId) in shelf:
             return shelf[str(docId)]
@@ -54,7 +55,7 @@ def isValidJsonSize(file):
         return False
     return True
 
-def isMemoryFull(limit=11):
+def isMemoryFull(limit=10.5):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
@@ -88,7 +89,7 @@ def main() -> None:
         if not isValidJsonSize(jFile):
             writeData(invIndex, docId, count)
             count += 1
-        
+
         #Dont Load json file
         if not isValidJsonSize(jFile):
             docFile = open("InvalidJson.txt", "a")
