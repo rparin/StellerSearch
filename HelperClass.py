@@ -1,4 +1,3 @@
-from collections import defaultdict
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 import pandas as pd
