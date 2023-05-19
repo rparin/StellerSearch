@@ -107,8 +107,6 @@ def main() -> None:
     if docId != getDocNum():
         writeData(invIndex, dList, docId)
 
-    
-
 if __name__ == "__main__":
     main()
 
