@@ -92,9 +92,9 @@ class InvertedIndex:
         df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
-        df = _df_from_dict(self._weights)
-        self._weights.clear()
-        df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+        # df = _df_from_dict(self._weights)
+        # self._weights.clear()
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
 
     #Clear inverted index
     def clear(self):
@@ -161,8 +161,8 @@ class HTMLTokenizer(HTMLParser):
                     self._invIndex.addPosition(token, self._docId, self._pos)
                     
                     #Add Weight
-                    for field in self._weights.getActiveFields():
-                        self._invIndex.addWeight(token, self._docId, field, self._pos)
+                    # for field in self._weights.getActiveFields():
+                    #     self._invIndex.addWeight(token, self._docId, field, self._pos)
 
                     self._pos += 1
 

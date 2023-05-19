@@ -55,7 +55,7 @@ def isValidJsonSize(file):
         return False
     return True
 
-def isMemoryFull(limit=10.5):
+def isMemoryFull(limit=11):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
@@ -88,6 +88,7 @@ def main() -> None:
     for jFile in jsonFiles:
         if not isValidJsonSize(jFile):
             writeData(invIndex, docId, count)
+            invIndex.clear()
             count += 1
 
         #Dont Load json file
@@ -110,10 +111,12 @@ def main() -> None:
                 if isMemoryFull():
                     writeData(invIndex, docId, count)
                     count += 1
+                    invIndex.clear()
 
     if docId != getDocNum():
         writeData(invIndex, docId, count)
         count += 1
+        invIndex.clear()
 
 def test() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
