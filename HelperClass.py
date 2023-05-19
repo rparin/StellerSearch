@@ -4,151 +4,80 @@ from nltk.stem import PorterStemmer
 import shelve
 import re
 
-#Posting is an object to hold token information for a single document
-class Posting:
-    def __init__(self, docId:int) -> None:
-        self._docId:int = docId
-        self._positions = set()
-        self._weights = defaultdict(lambda: set())
-
-    #Setters functions
-    def addPosition(self, pos:int) -> None:
-        self._positions.add(pos)
-
-    def addWeight(self, wType:str, pos:int) -> None:
-        self._weights[wType].add(pos)
-
-    #Getter functions
-    def getDocId(self) -> int:
-        return self._docId
-
-    def getFreq(self) -> int:
-        return len(self._positions)
-    
-    def printWeights(self, getStr = False) -> None | str:
-        rStr = f'\t\tFields:'
-        if len(self._weights) == 0:
-            rStr += 'None\n'
-        else:
-            for w in self._weights:
-                rStr += f'\n\t\t\t{w}:{self._weights[w]}'
-        if getStr: return rStr
-        print(rStr)
-
-    #Overload bracket operator to allow access of positions or weights
-    #Example: postingObj['positions'] or postingObj['wt']
-    def __getitem__(self, key):
-        if key == 'positions' or key == 'pos': return self._positions
-        if key == 'weights' or key == 'wt': return self._weights
-        assert key, f"{key} does NOT exist!"
-        
-
-    #Overload print function to print obj info
-    def __repr__(self) -> str:
-        rStr = f'\tDocId: {self._docId}, Freq: {self.getFreq()}\n\t\tPositions:'
-        if self.getFreq() == 0:
-            rStr += ' None'
-        else:
-            rStr += f' {self._positions}'
-        
-        rStr += f'\n{self.printWeights(getStr=True)}'
-        return rStr
-    
-    def getFreqStr(self) -> str:
-        return f'{self.getDocId()}:{self.getFreq()};'
-
-    def getPosStr(self) -> str:
-        pStr = str(self._positions).strip('}').strip('{').replace(' ','')
-        if len(self._positions) != 0:
-            return f'{self.getDocId()}:{pStr};'
-        return ''
-
-    def getFieldStr(self) -> str:
-        wStr = str(dict(self._weights)).replace('}', '').replace('{','').replace(' ','').replace('\'','')
-        return f'{self.getDocId()}-{wStr};'
-    
-#Token is an object to hold a string, its total freq across all doc's and multiple Posting objects
+#Posting is an object that holds the term and info about that term for multiple documents
 class Token:
     def __init__(self, tok:str) -> None:
         self._tok:str = tok
-        self._totalFreq:int = 0
-        self._postings = defaultdict(lambda: dict)
+        self._positions = defaultdict(lambda: set())
+        self._weights = defaultdict(lambda: dict)
+        self._docId = set()
+
+    def addPosition(self, docId: int, pos:int):
+        self._positions[docId].add(pos)
     
-    def addPosting(self, posting: Posting):
-        self._postings[posting.getDocId()] = posting
-        self._totalFreq += posting.getFreq()
+    def addWeight(self, docId:int, field:str, pos:int):
+        if docId in self._weights:
+            if field in self._weights[docId]:
+                self._weights[docId][field].add(pos)
+            else:
+                self._weights[docId][field] = {pos}
+        else:
+            self._weights[docId] = {field:{pos}}
+        
+    def addDoc(self, docId:int):
+        self._docId.add(docId)
 
     #Getter functions
     def getToken(self) -> str:
         return self._tok
+    
+    def getAllPos(self) -> dict:
+        return dict(self._positions)
+    
+    def getAllDocId(self) -> set:
+        return self._docId
+    
+    def getAllWeights(self) -> dict:
+        return dict(self._weights)
+    
+    def __getitem__(self, postType:str) -> dict:
+        assert postType == 'pos' or postType == 'field', f"Token info '{postType}' does NOT exist!"
+        
+        if postType == 'pos':
+            return self._positions
+        
+        if postType == 'field':
+            return self._weights
+    
+    #Setters
+    def setWeights(self, weights:dict) -> None:
+        self._weights = defaultdict(dict, weights)
 
-    def getPosting(self, docId:int) -> Posting:
-        return self._postings[docId]
-    
-    #Overload in operator 
-    #Example: if docId:int in TokenObj
-    #Check if token contains docId posting
-    def __contains__(self, docId:int) -> bool:
-        return docId in self._postings
-    
-    def getTf(self) -> int:
-        return self._totalFreq
-    
-    def recountTf(self) -> int:
-        self._totalFreq:int = 0
-        for docId in self._postings:
-            self._totalFreq += self._postings[docId].getFreq()
-        return self.getTf()
-    
-    #Overload bracket operator to allow accessing inverted index doc and posting obj
-    #Example: TokenObj[docId:int]
-    def __getitem__(self, docId:int) -> Posting:
-        assert docId in self._postings, f"Document #{docId} does NOT exist!"
-        return self._postings[docId]
+    def setPos(self, pos:dict) -> None:
+        self._positions = defaultdict(set, pos)
+
+    def setAllDocId(self, docId:set) -> None:
+        self._docId = docId
     
     #Overload print function to print obj info
     def __repr__(self) -> str:
-        rStr = f'Token: {self._tok}, Total Freq: {self.getTf()}\n'
-        for docId in self._postings:
-            rStr += f'{self._postings[docId]}\n'
+        rStr = f'Token: {self._tok}'
+        for docId in self.getAllDocId():
+            rStr += f'\n\tDocId: {docId}, Freq: {len(self._positions[docId])}\n\t\tPos: {self._positions[docId]}\n\t\tWeights: {dict(self._weights[docId])}'
         return rStr
     
-    def test(self):
-        for docId in self._postings:
-            print(docId)
-    
     def write(self, filePath:str = 'Shelve') -> None:
-        for docId in self._postings:
-            postObj = self._postings[docId]
-            token = self.getToken()
+        pass
+        # for docId in self._postings:
+        #     postObj = self._postings[docId]
+        #     token = self.getToken()
 
-            #Store which document(s) token appears
-            with shelve.open(f'{filePath}/Postings', 'c') as shelf:
-                if token in shelf:
-                    shelf[token] += f',{docId}'
-                else:
-                    shelf[token] = f'{docId}'
-
-            #Store Token Freq
-            with shelve.open(f'{filePath}/Freq', 'c') as shelf:
-                if token in shelf:
-                    shelf[token] += postObj.getFreqStr()
-                else:
-                    shelf[token] = postObj.getFreqStr()
-
-            #Store Token Positions
-            with shelve.open(f'{filePath}/Pos', 'c') as shelf:
-                if token in shelf:
-                    shelf[token] += postObj.getPosStr()
-                else:
-                    shelf[token] = postObj.getPosStr()
-
-            #Store Token Fields
-            with shelve.open(f'{filePath}/Fields', 'c') as shelf:
-                if token in shelf:
-                    shelf[token] += postObj.getFieldStr()
-                else:
-                    shelf[token] = postObj.getFieldStr()
+        #     #Store which document(s) token appears
+        #     with shelve.open(f'{filePath}/Postings', 'c') as shelf:
+        #         if token in shelf:
+        #             shelf[token] += f',{docId}'
+        #         else:
+        #             shelf[token] = f'{docId}'
 
     
 #InvertedIndex is an object to hold multiple document objects
@@ -159,10 +88,6 @@ class InvertedIndex:
     #Setter functions
     def addToken(self, token:Token) -> None:
         self._index[token.getToken()] = token
-
-    def reCountTf(self) -> int:
-        for token in self._index:
-            self._index[token].recountTf()
 
     #Getter functions
     def getTokenAmount(self) -> int:
@@ -183,7 +108,7 @@ class InvertedIndex:
     def __repr__(self) -> str:
         rStr = f'Total Tokens: {self.getTokenAmount()}\n'
         for token in self._index:
-            rStr += f'{self._index[token]}\n'
+            rStr += f'{self._index[token]}\n\n'
         return rStr
     
     #Write inverted index to multiple shelve files
@@ -251,71 +176,26 @@ class HTMLTokenizer(HTMLParser):
                 if (aToken != ''):
                     token = self.stemmer.stem(aToken)
 
-                    #create token, add posting using given docId
+                    #create token if not in index
                     if token not in self._invIndex:
-                        tempPost = Posting(self._docId)
                         tempToken = Token(token)
-                        tempToken.addPosting(tempPost)
+                        tempToken.addDoc(self._docId)
                         self._invIndex.addToken(tempToken)
-
-                    #Token exists but posting for document does not exist
                     else:
-                        if self._docId not in self._invIndex[token]:
-                            tempPost = Posting(self._docId)
-                            self._invIndex[token].addPosting(tempPost)
+                        #Add docId to token if not already in there
+                        if self._docId not in self._invIndex[token].getAllDocId():
+                            self._invIndex[token].addDoc(self._docId)
 
-                    #Update posting for given docId
-                    #Add Position
-                    self._invIndex[token][self._docId].addPosition(self._pos)
+                    #Add Position for given docId
+                    self._invIndex[token].addPosition(self._docId, self._pos)
                     
                     #Add Weight
                     for field in self._weights.getActiveFields():
-                        self._invIndex[token][self._docId].addWeight(field,self._pos)
+                        self._invIndex[token].addWeight(self._docId, field, self._pos)
 
                     self._pos += 1
 
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
-
-class ShelveDB():
-    def __init__(self, filePath:str = 'DevShelve') -> None:
-        self._filePath:str = filePath
-        self._files = {'postId':'Postings','freq':'Freq', 'pos':'Pos','fields':'Fields'}
-
-    def _getShelveItem(self, token:str, item:str) -> str:
-        with shelve.open(f'{self._filePath}/{item}', 'c') as shelf:
-            if token in shelf:
-                return shelf[token]
-            else:
-                return ''
-            
-    #Get which document(s) token appears        
-    def getPostId(self, token) -> str:
-        return self._getShelveItem(token, self._files['postId'])
-
-    #Get the frequency of token in document(s)        
-    def getTokenFreq(self, token:str) -> str:
-        return self._getShelveItem(token, self._files['freq'])
-    
-    #Get the position of token in document(s)  
-    def getTokenPos(self, token:str) -> str:
-        return self._getShelveItem(token, self._files['pos'])
-    
-    #Get the fields of token in document(s)  
-    def getTokenFields(self, token:str) -> str:
-        return self._getShelveItem(token, self._files['fields'])
-    
-    #Get the total number of documents in shelve file 
-    def getTotalDocNum(self) -> int:
-        with shelve.open(f'{self._filePath}/DocId', 'c') as shelf:
-            if 'totalDoc' not in shelf:
-                shelf['totalDoc'] = 0
-            return int(shelf['totalDoc'])
-        
-    def readToken(self, token:str) -> None:
-        print(self.getPostId(token))
-        print(self.getTokenFreq(token))
-        print(self.getTokenPos(token))
-        print(self.getTokenFields(token))
     
