@@ -54,15 +54,6 @@ class Token:
         self._positions.update(token.getAllPos())
         self._weights.update(token.getAllFields())
         self._docId.update(token.getAllDocId())
-
-    def setFields(self, weights:dict) -> None:
-        self._weights = defaultdict(dict, weights)
-
-    def setPos(self, pos:dict) -> None:
-        self._positions = defaultdict(set, pos)
-
-    def setAllDocId(self, docId:set) -> None:
-        self._docId = docId
     
     #Overload print function to print obj info
     def __repr__(self) -> str:
