@@ -60,8 +60,8 @@ def isMemoryFull(limit=12):
        return True
     return False
 
-def writeData(invIndex, dList, docId):
-    invIndex.write('DevShelve')
+def writeData(invIndex, dList, docId, count):
+    invIndex.write('DevHDF5', count)
     invIndex.clear()
     for dItem in dList:
         writeDoc(dItem[0], dItem[1])
@@ -87,9 +87,11 @@ def main() -> None:
     invIndex = InvertedIndex() 
     docId = 0
     dList = []
+    count = 1
     for jFile in jsonFiles:
         if not isValidJsonSize(jFile):
-            writeData(invIndex, dList, docId)
+            writeData(invIndex, dList, docId, count)
+            count += 1
 
         #Dont Load json file
         if not isValidJsonSize(jFile):
@@ -110,10 +112,12 @@ def main() -> None:
                 print(docId, url)
 
                 if isMemoryFull():
-                    writeData(invIndex, dList, docId)
+                    writeData(invIndex, dList, docId, count)
+                    count += 1
 
     if docId != getDocNum():
-        writeData(invIndex, dList, docId)
+        writeData(invIndex, dList, docId, count)
+        count += 1
 
 def test() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
