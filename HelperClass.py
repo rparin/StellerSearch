@@ -108,7 +108,11 @@ class InvertedIndex:
             for i in range(1,count+1):
                 tempShelve = shelf[f'index{i}']
                 for word in words:
-                    self._positions[word] = tempShelve[word]
+                    if word in tempShelve:
+                        if word in self._positions:
+                            self._positions[word].update(tempShelve[word])
+                        else:
+                            self._positions[word] = tempShelve[word]
 
     #Clear inverted index
     def clear(self):
