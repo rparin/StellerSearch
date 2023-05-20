@@ -90,12 +90,12 @@ class InvertedIndex:
     def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        # with shelve.open(f'{filePath}/index', 'c') as shelf:
-        #     shelf[f'index{count}'] = self.getAllPos()
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            shelf[f'index{count}'] = self.getAllPos()
 
         #Write pos index to file using Pos{count} as key
-        df = _df_from_dict(self.getAllPos())
-        df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+        # df = _df_from_dict(self.getAllPos())
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
         # df = _df_from_dict(self.getAllFields())
@@ -108,10 +108,11 @@ class InvertedIndex:
             for i in range(1,count+1):
                 tempShelve = shelf[f'index{i}']
                 for word in words:
-                    if word in self._positions:
-                        self._positions[word].update(tempShelve[word])
-                    else:
-                        self._positions[word] = tempShelve[word]
+                    if word in tempShelve:
+                        if word in self._positions:
+                            self._positions[word].update(tempShelve[word])
+                        else:
+                            self._positions[word] = tempShelve[word]
 
     #Clear inverted index
     def clear(self):
