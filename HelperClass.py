@@ -104,9 +104,11 @@ class InvertedIndex:
     def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
         with shelve.open(f'{filePath}/index', 'c') as shelf:
             # self._positions = shelf[f'index{count}']
+            tempShelve = None
             for i in range(1,count+1):
+                tempShelve = shelf[f'index{i}']
                 for word in words:
-                    self._positions[word] = shelf[f'index{i}'][word]
+                    self._positions[word] = tempShelve[word]
 
     #Clear inverted index
     def clear(self):
