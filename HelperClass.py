@@ -1,139 +1,118 @@
-from collections import defaultdict
 from html.parser import HTMLParser
-import re
 from nltk.stem import PorterStemmer
+import pandas as pd
+import re
+import shelve
 
-#Posting is an object to hold token information for a single document
-class Posting:
-    def __init__(self, docId:int) -> None:
-        self._docId:int = docId
-        self._positions = set()
-        self._weights = defaultdict(lambda: set())
+def _df_from_dict(dictObj:dict, toInt = False):
+    df = pd.DataFrame.from_dict(dictObj, orient='index')
+    df.fillna(0, inplace=True)
+    if toInt: df = df.astype('int32')
+    return df.transpose()
 
-    #Setters functions
-    def addPosition(self, pos:int) -> None:
-        self._positions.add(pos)
+#Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
+def _dict_from_df(df) -> dict:
+    df = df.transpose()
+    series_set = df.apply(frozenset, axis=1)
+    new_df = series_set.apply(lambda a: set(a))
+    return dict(new_df)
 
-    def addWeight(self, wType:str, pos:int) -> None:
-        self._weights[wType].add(pos)
-
-    #Getter functions
-    def getDocId(self) -> int:
-        return self._docId
-
-    def getFreq(self) -> int:
-        return len(self._positions)
+def _join_df_col(df1,df2):
+    df3 = df1.merge(df2)
+    df3.fillna(0, inplace=True)
+    return df3.astype('int32')
     
-    def printWeights(self, getStr = False) -> None | str:
-        rStr = f'\t\tFields:'
-        if len(self._weights) == 0:
-            rStr += 'None\n'
-        else:
-            for w in self._weights:
-                rStr += f'\n\t\t\t{w}:{self._weights[w]}'
-        if getStr: return rStr
-        print(rStr)
-
-    #Overload bracket operator to allow access of positions or weights
-    #Example: postingObj['positions'] or postingObj['wt']
-    def __getitem__(self, key):
-        if key == 'positions' or key == 'pos': return self._positions
-        if key == 'weights' or key == 'wt': return self._weights
-        assert key, f"{key} does NOT exist!"
-        
-
-    #Overload print function to print obj info
-    def __repr__(self) -> str:
-        rStr = f'\tDocId: {self._docId}, Freq: {self.getFreq()}\n\t\tPositions:'
-        if self.getFreq() == 0:
-            rStr += ' None'
-        else:
-            rStr += f' {self._positions}'
-        
-        rStr += f'\n{self.printWeights(getStr=True)}'
-        return rStr
-    
-#Token is an object to hold a string, its total freq across all doc's and multiple Posting objects
-class Token:
-    def __init__(self, tok:str) -> None:
-        self._tok:str = tok
-        self._totalFreq:int = 0
-        self._postings = defaultdict(lambda: dict)
-    
-    def addPosting(self, posting: Posting):
-        self._postings[posting.getDocId()] = posting
-        self._totalFreq += posting.getFreq()
-
-    #Getter functions
-    def getToken(self) -> str:
-        return self._tok
-
-    def getPosting(self, docId:int) -> Posting:
-        return self._postings[docId]
-    
-    #Overload in operator 
-    #Example: if docId:int in TokenObj
-    #Check if token contains docId posting
-    def __contains__(self, docId:int) -> bool:
-        return docId in self._postings
-    
-    def getTf(self) -> int:
-        return self._totalFreq
-    
-    def recountTf(self) -> int:
-        self._totalFreq:int = 0
-        for docId in self._postings:
-            self._totalFreq += self._postings[docId].getFreq()
-        return self.getTf()
-    
-    #Overload bracket operator to allow accessing inverted index doc and posting obj
-    #Example: TokenObj[docId:int]
-    def __getitem__(self, docId:int) -> Posting:
-        assert docId in self._postings, f"Document #{docId} does NOT exist!"
-        return self._postings[docId]
-    
-    #Overload print function to print obj info
-    def __repr__(self) -> str:
-        rStr = f'Token: {self._tok}, Total Freq: {self.getTf()}\n'
-        for docId in self._postings:
-            rStr += f'{self._postings[docId]}\n'
-        return rStr
-
-    
-#InvertedIndex is an object to hold multiple document objects
+#InvertedIndex is an object to hold term posting information
 class InvertedIndex:
     def __init__(self) -> None:
-        self._index = defaultdict(lambda: dict)
+        self._positions = {}
+        self._weights = {}
 
-    #Setter functions
-    def addToken(self, token:Token) -> None:
-        self._index[token.getToken()] = token
-
-    def reCountTf(self) -> int:
-        for token in self._index:
-            self._index[token].recountTf()
-
+    def addPosition(self, term:str, docId: int, pos:int):
+        if term in self._positions:
+            if docId in self._positions[term]:
+                self._positions[term][docId].add(pos)
+            else:
+                self._positions[term].update({docId: {pos}})
+        else:
+            self._positions[term] = {docId:{pos}}
+            
+    def addWeight(self, term:str, docId:int, field:str, pos:int):
+        if term in self._weights:
+            if docId in self._weights[term]:
+                if field in self._weights[term][docId]:
+                    self._weights[term][docId][field].add(pos)
+                else:
+                    self._weights[term][docId][field] = {pos}
+            else:
+                self._weights[term].update({docId:{field:{pos}}})
+        else:
+            self._weights[term] = {docId:{field:{pos}}}
+        
     #Getter functions
     def getTokenAmount(self) -> int:
-        return len(self._index)
+        return len(self._positions)
+    
+    def getAllPos(self) -> dict:
+        return self._positions
+    
+    def getAllFields(self) -> dict:
+        return self._weights
     
     #Overload in operator 
     #Example: if token:str in InvertedIndexObj
     def __contains__(self, token:str) -> bool:
-        return token in self._index
-        
+        return token in self._positions
+
     #Overload bracket operator to allow accessing inverted index doc and posting obj
     #Example: InvertedIndexObj[token:str]
-    def __getitem__(self, tok):
-        assert tok in self._index, f"Token '{tok}' does NOT exist!"
-        return self._index[tok]
+    def __getitem__(self, postType:str):
+        assert postType == 'pos' or postType == 'field', f"Token info '{postType}' does NOT exist!"
+        
+        if postType == 'pos':
+            return self._positions
+        
+        if postType == 'field':
+            return self._weights
 
     #Overload print function to print obj info
     def __repr__(self) -> str:
-        rStr = f'Total Tokens: {self.getTokenAmount()}\n'
-        for token in self._index:
-            rStr += f'{self._index[token]}\n'
+        rStr = f'Total Tokens: {self.getTokenAmount()}'
+        for token in self.getAllPos():
+            rStr += f'\nToken: {token}'
+            for docId in self.getAllPos()[token]:
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\t \
+                Pos: {self.getAllPos()[token][docId]}'
+                #rStr += '\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
+    
+    #Write inverted index to multiple shelve files
+    def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
+
+        #Write pos index to file using Pos{count} as key
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            shelf[f'index{count}'] = self.getAllPos()
+
+        #Write pos index to file using Pos{count} as key
+        # df = _df_from_dict(self.getAllPos())
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+
+        #Write field index to file using fields{count} as key
+        # df = _df_from_dict(self.getAllFields())
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+
+    def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            # self._positions = shelf[f'index{count}']
+            tempShelve = None
+            for i in range(1,count+1):
+                tempShelve = shelf[f'index{i}']
+                for word in words:
+                    self._positions[word] = tempShelve[word]
+
+    #Clear inverted index
+    def clear(self):
+        self._index.clear()
     
 class WeightFlags:
     def __init__(self) -> None:
@@ -161,7 +140,8 @@ class WeightFlags:
         self._setFields.add(field)
 
     def removeField(self, field:str) -> None:
-        self._setFields.remove(field)
+        if field in self._setFields:
+            self._setFields.remove(field)
 
     def clearFields(self) -> None:
         self._setFields.clear()
@@ -190,29 +170,16 @@ class HTMLTokenizer(HTMLParser):
                 if (aToken != ''):
                     token = self.stemmer.stem(aToken)
 
-                    #create token, add posting using given docId
-                    if token not in self._invIndex:
-                        tempPost = Posting(self._docId)
-                        tempToken = Token(token)
-                        tempToken.addPosting(tempPost)
-                        self._invIndex.addToken(tempToken)
-
-                    #Token exists but posting for document does not exist
-                    else:
-                        if self._docId not in self._invIndex[token]:
-                            tempPost = Posting(self._docId)
-                            self._invIndex[token].addPosting(tempPost)
-
-                    #Update posting for given docId
-                    #Add Position
-                    self._invIndex[token][self._docId].addPosition(self._pos)
+                    #Add Position for given docId
+                    self._invIndex.addPosition(token, self._docId, self._pos)
                     
                     #Add Weight
                     for field in self._weights.getActiveFields():
-                        self._invIndex[token][self._docId].addWeight(field,self._pos)
+                        self._invIndex.addWeight(token, self._docId, field, self._pos)
 
                     self._pos += 1
 
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
+    
