@@ -88,7 +88,7 @@ class InvertedIndex:
     def write(self, filePath:str = 'DevShelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        with shelve.open('Shelve/index', 'c') as shelf:
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
             shelf[f'index{count}'] = invIndex.getAllPos()
 
         # df = _df_from_dict(self._positions)
