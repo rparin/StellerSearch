@@ -65,7 +65,10 @@ def main():
         query = input('> ')
         stemList = stemQuery(query)
         invIndex = InvertedIndex()
-        invIndex.load(stemList)
+        invIndex.load(stemList,count=6)
         qDict = getDfDict(stemList,invIndex)
         tfIdfDict = getTfIdfDict(qDict, invIndex, N)
         getTopResults(tfIdfDict,5)
+
+if __name__ == "__main__":
+    main()
