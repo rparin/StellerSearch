@@ -96,10 +96,10 @@ def main() -> None:
             skip = False
             try:
                 url, htmlContent = getJsonData(jFile)
+            except:
                 docFile = open("InvalidJson.txt", "a")
                 docFile.write(f'{docId}:{url}\n')
                 docFile.close()
-            except:
                 skip = True
 
             #Check if already parsed
