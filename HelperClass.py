@@ -2,6 +2,7 @@ from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 import pandas as pd
 import re
+import shelve
 
 def _df_from_dict(dictObj:dict, toInt = False):
     df = pd.DataFrame.from_dict(dictObj, orient='index')
