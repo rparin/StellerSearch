@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 /Shelve
+/DevShelve
 __pycache__/
 *.py[cod]
 *$py.class
