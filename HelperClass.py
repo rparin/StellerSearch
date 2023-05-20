@@ -1,8 +1,8 @@
-from collections import defaultdict
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 import pandas as pd
 import re
+import shelve
 
 def _df_from_dict(dictObj:dict, toInt = False):
     df = pd.DataFrame.from_dict(dictObj, orient='index')
@@ -81,19 +81,32 @@ class InvertedIndex:
         for token in self.getAllPos():
             rStr += f'\nToken: {token}'
             for docId in self.getAllPos()[token]:
-                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\t \
+                Pos: {self.getAllPos()[token][docId]}'
+                #rStr += '\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
     #Write inverted index to multiple shelve files
-    def write(self, filePath:str = 'DevHDF5', count:int = 1) -> None:
+    def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        df = _df_from_dict(self.getAllPos())
-        df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            shelf[f'index{count}'] = self.getAllPos()
+
+        #Write pos index to file using Pos{count} as key
+        # df = _df_from_dict(self.getAllPos())
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
-        df = _df_from_dict(self.getAllFields())
-        df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+        # df = _df_from_dict(self.getAllFields())
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+
+    def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            # self._positions = shelf[f'index{count}']
+            for i in range(1,count+1):
+                for word in words:
+                    self._positions[word] = shelf[f'index{i}'][word]
 
     #Clear inverted index
     def clear(self):
