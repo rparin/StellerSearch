@@ -84,12 +84,15 @@ class InvertedIndex:
         return rStr
     
     #Write inverted index to multiple shelve files
-    def write(self, filePath:str = 'DevHDF5', count:int = 1) -> None:
+    def write(self, filePath:str = 'DevShelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        df = _df_from_dict(self._positions)
-        self._positions.clear()
-        df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+        with shelve.open('Shelve/index', 'c') as shelf:
+            shelf[f'index{count}'] = invIndex.getAllPos()
+
+        # df = _df_from_dict(self._positions)
+        # self._positions.clear()
+        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
         # df = _df_from_dict(self._weights)

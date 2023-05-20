@@ -8,10 +8,6 @@ from helper import tokenizeHtml
 def writeDoc(docId:str, url:str):
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
         shelf[str(docId)] = url
-    
-    docFile = open("DocId.txt", "a")
-    docFile.write(f'{docId}:{url}\n')
-    docFile.close()
 
 def getDocNum():
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
@@ -51,18 +47,18 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .11):
+    if fileSize + ramUsedGb >= (totalRam * .12):
         return False
     return True
 
-def isMemoryFull(limit=11):
+def isMemoryFull(limit=11.5):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
     return False
 
 def writeData(invIndex, docId, count):
-    invIndex.write('DevHDF5', count)
+    invIndex.write('DevShelve', count)
     invIndex.clear()
     storeDocNum(docId)
     print("----Wrote Data to File----")
@@ -76,19 +72,19 @@ def getJsonFiles(rootDir):
                 jsonFiles.append(full_path)
     return jsonFiles
 
-
 def main() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = getJsonFiles(rootDir)
 
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
-    docId = 0
+    docId = 1
     count = 1
     for jFile in jsonFiles:
         if not isValidJsonSize(jFile):
             writeData(invIndex, docId, count)
             invIndex.clear()
+            invIndex = InvertedIndex() 
             count += 1
 
         #Dont Load json file
@@ -97,26 +93,34 @@ def main() -> None:
             docFile.write(f'{docId}:{url}\n')
             docFile.close()
         else:
-            docId += 1
-            url, htmlContent = getJsonData(jFile)
+            skip = False
+            try:
+                url, htmlContent = getJsonData(jFile)
+            except:
+                skip = True
 
             #Check if already parsed
-            if url == getDocUrl(docId):
-                print(f'Parsed Already -- {docId}:{url}')
+            if skip:
+                print(f'Skipping -- {docId}')
             else:
                 # Cleans and parses HTML content into tokens then adds it to Inverted index
                 tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
+                writeDoc(docId, url)
                 print(docId, url)
-
+                
                 if isMemoryFull():
                     writeData(invIndex, docId, count)
                     count += 1
                     invIndex.clear()
+                    invIndex = InvertedIndex() 
+
+                docId += 1
 
     if docId != getDocNum():
         writeData(invIndex, docId, count)
         count += 1
         invIndex.clear()
+        invIndex = InvertedIndex() 
 
 def test() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
