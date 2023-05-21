@@ -55,7 +55,7 @@ def isValidJsonSize(file):
         return False
     return True
 
-def isMemoryFull(limit=14): #dont go over 17.5
+def isMemoryFull(limit=16.5): #dont go over 17.5
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
