@@ -33,3 +33,6 @@ def main():
         count += 1
         storeTermDf(invIndex,term)
         print(count, term)
+
+if __name__ == "__main__":
+    main()

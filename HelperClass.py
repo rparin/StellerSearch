@@ -114,7 +114,7 @@ class InvertedIndex:
                         else:
                             self._positions[word] = tempShelve[word]
     
-    def loadAll(self, filePath:str = 'Shelve', count:int = 1):
+    def loadAll(self, filePath:str = 'DevShelve', count:int = 1):
         with shelve.open(f'{filePath}/index', 'c') as shelf:
             self._positions.update(shelf[f'index{count}'])
 
