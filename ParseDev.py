@@ -51,11 +51,11 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .165):
+    if fileSize + ramUsedGb >= (totalRam * .125):
         return False
     return True
 
-def isMemoryFull(limit=16): #dont go over 17.5
+def isMemoryFull(limit=125): #dont go over 17.5
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
@@ -79,6 +79,7 @@ def getJsonFiles(rootDir):
 def main() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = getJsonFiles(rootDir)
+    parsedUrl = set()
 
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
@@ -107,12 +108,13 @@ def main() -> None:
                 docFile.close()
                 skip = True
 
-            if skip:
-                print(f'Skipping -- {docId}')
+            if skip or (url in parsedUrl):
+                print(f'Parsed Already or Encoding issue -- {docId}')
             else:
                 # Cleans and parses HTML content into tokens then adds it to Inverted index
                 docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
                 writeDoc(docId, url, docLen)
+                parsedUrl.add(url)
                 print(docId, url)
                 
                 if isMemoryFull():
@@ -123,12 +125,15 @@ def main() -> None:
 
                 docId += 1
 
-    if docId != getDocNum():
-        writeData(invIndex, docId, count)
-        writeDoc(docId, url, docLen)
-        count += 1
-        invIndex.clear()
-        invIndex = InvertedIndex() 
+    if url not in parsedUrl:
+        if docId != getDocNum():
+            writeData(invIndex, docId, count)
+            writeDoc(docId, url, docLen)
+            count += 1
+            invIndex.clear()
+            invIndex = InvertedIndex()
+    else:
+        print(f'Parsed Already or Encoding issue -- {docId}, {url}')
 
 def test() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
