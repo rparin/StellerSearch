@@ -81,9 +81,8 @@ class InvertedIndex:
         for token in self.getAllPos():
             rStr += f'\nToken: {token}'
             for docId in self.getAllPos()[token]:
-                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\t \
-                Pos: {self.getAllPos()[token][docId]}'
-                #rStr += '\n\t\tWeights: {self.getAllFields()[token][docId]}'
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])} \
+                \n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
     #Write inverted index to multiple shelve files
