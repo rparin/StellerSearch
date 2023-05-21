@@ -92,6 +92,7 @@ class InvertedIndex:
         #Write pos index to file using Pos{count} as key
         with shelve.open(f'{filePath}/index', 'c') as shelf:
             shelf[f'index{count}'] = self.getAllPos()
+            shelf[f'weight{count}'] = self.getAllFields()
 
         #Write pos index to file using Pos{count} as key
         # df = _df_from_dict(self.getAllPos())
@@ -186,4 +187,7 @@ class HTMLTokenizer(HTMLParser):
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
+    
+    def getDocLen(self):
+        return self._pos
     
