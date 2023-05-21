@@ -5,9 +5,13 @@ import shelve
 from HelperClass import InvertedIndex
 from helper import tokenizeHtml
 
-def writeDoc(docId:str, url:str):
-    with shelve.open(f'DevShelve/Url', 'c') as shelf:
-        shelf[str(docId)] = url
+def writeDoc(docId:str, url:str, docLen:int):
+    # with shelve.open(f'DevShelve/Url', 'c') as shelf:
+    #     shelf[str(docId)] = url
+
+    docFile = open("docId.txt", "a")
+    docFile.write(f'{docId} {url} {docLen}\n')
+    docFile.close()
 
 def getDocNum():
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
@@ -47,11 +51,11 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .12):
+    if fileSize + ramUsedGb >= (totalRam * .165):
         return False
     return True
 
-def isMemoryFull(limit=11.5):
+def isMemoryFull(limit=14): #dont go over 17.5
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
@@ -83,6 +87,7 @@ def main() -> None:
     for jFile in jsonFiles:
         if not isValidJsonSize(jFile):
             writeData(invIndex, docId, count)
+            writeDoc(docId, url, docLen)
             invIndex.clear()
             invIndex = InvertedIndex() 
             count += 1
@@ -90,25 +95,24 @@ def main() -> None:
         #Dont Load json file
         if not isValidJsonSize(jFile):
             docFile = open("InvalidJson.txt", "a")
-            docFile.write(f'{docId}:{url}\n')
+            docFile.write(f'{docId} {url}\n')
             docFile.close()
         else:
             skip = False
             try:
                 url, htmlContent = getJsonData(jFile)
             except:
-                docFile = open("InvalidJson.txt", "a")
-                docFile.write(f'{docId}:{url}\n')
+                docFile = open("HTMLContentErr.txt", "a")
+                docFile.write(f'{docId} {url}\n')
                 docFile.close()
                 skip = True
 
-            #Check if already parsed
             if skip:
                 print(f'Skipping -- {docId}')
             else:
                 # Cleans and parses HTML content into tokens then adds it to Inverted index
-                tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
-                writeDoc(docId, url)
+                docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
+                writeDoc(docId, url, docLen)
                 print(docId, url)
                 
                 if isMemoryFull():
@@ -121,6 +125,7 @@ def main() -> None:
 
     if docId != getDocNum():
         writeData(invIndex, docId, count)
+        writeDoc(docId, url, docLen)
         count += 1
         invIndex.clear()
         invIndex = InvertedIndex() 
@@ -138,4 +143,3 @@ def test() -> None:
 
 if __name__ == "__main__":
     main()
-

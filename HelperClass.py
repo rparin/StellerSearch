@@ -18,7 +18,7 @@ def _dict_from_df(df) -> dict:
     return dict(new_df)
 
 def _join_df_col(df1,df2):
-    df3 = df1.merge(df2)
+    df3 = df1.join(df2)
     df3.fillna(0, inplace=True)
     return df3.astype('int32')
     
@@ -90,6 +90,7 @@ class InvertedIndex:
         #Write pos index to file using Pos{count} as key
         with shelve.open(f'{filePath}/index', 'c') as shelf:
             shelf[f'index{count}'] = self.getAllPos()
+            shelf[f'weight{count}'] = self.getAllFields()
 
         # df = _df_from_dict(self._positions)
         # self._positions.clear()
@@ -107,14 +108,11 @@ class InvertedIndex:
     
 class WeightFlags:
     def __init__(self) -> None:
-        #Field not defined is considered normal weight
+        #Field not defined is considered normal(n) weight
         self._fields = {'title', 'header', 'footer',
                        'h1','h2','h3','h4','h5','h6',
-                       's', #strikethrough
-                       'strike', #strikethrough
                        'i', #italic
-                       'b','strong','em','a','article',
-                       'caption','nav','menu','cite'}
+                       'b','strong','em','a'}
         self._setFields = set()
     
     #Getters
@@ -123,7 +121,7 @@ class WeightFlags:
 
     def getActiveFields(self) -> set():
         if len(self._setFields) == 0:
-            return {'normal'}
+            return {'n'}
         return self._setFields
 
     #Setters
@@ -165,12 +163,15 @@ class HTMLTokenizer(HTMLParser):
                     self._invIndex.addPosition(token, self._docId, self._pos)
                     
                     #Add Weight
-                    # for field in self._weights.getActiveFields():
-                    #     self._invIndex.addWeight(token, self._docId, field, self._pos)
+                    for field in self._weights.getActiveFields():
+                        self._invIndex.addWeight(token, self._docId, field, self._pos)
 
                     self._pos += 1
 
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
+
+    def getDocLen(self):
+        return self._pos
     
