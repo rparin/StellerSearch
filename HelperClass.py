@@ -4,20 +4,52 @@ import pandas as pd
 import re
 import shelve
 
-def _df_from_dict(dictObj:dict, toInt = False):
+def _df_from_dict(dictObj:dict, toInt = False) -> pd.DataFrame:
+    """_A functions that takes in a dictionary object and converts it into a pandas
+    DataFrame. Any missing values are filled with 0. If the toInt in the 
+    function's parameter is set to true, than it can convert the data type to int32.
+
+    Args:
+        dictObj (dict): _description_
+        toInt (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        pd.DataFrame: A transposed DataFrame (indexes and columns)
+    """
     df = pd.DataFrame.from_dict(dictObj, orient='index')
     df.fillna(0, inplace=True)
     if toInt: df = df.astype('int32')
     return df.transpose()
 
 #Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
-def _dict_from_df(df) -> dict:
+def _dict_from_df(df: pd.DataFrame) -> dict:
+    """Takes in a DataFrame and coverts it back to a dictionary. It first transposes the
+    DataFrame, converts each row into a frozenset, and then converts each frozenset into
+    a set.
+
+    Args:
+        df (pd.DataFrame): A DataFrame
+
+    Returns:
+        dict: A dictionary
+    """
     df = df.transpose()
     series_set = df.apply(frozenset, axis=1)
     new_df = series_set.apply(lambda a: set(a))
     return dict(new_df)
 
-def _join_df_col(df1,df2):
+def _join_df_col(df1:pd.DataFrame,df2:pd.DataFrame) -> pd.DataFrame:
+    """Takes two DataFrames and merges them based on common columns.
+    Missing values in the resulting DataFrame are replaced with 0s.
+    The entire DataFrame is converted into int32 before returning.
+
+    Args:
+        df1 (pd.DataFrame): data frame #1
+        df2 (pd.DataFrame): data frame #2
+
+    Returns:
+        pd.DataFrame: A combined DataFrame of information from df1 and df2.
+    """
     df3 = df1.merge(df2)
     df3.fillna(0, inplace=True)
     return df3.astype('int32')
