@@ -18,7 +18,7 @@ def _dict_from_df(df) -> dict:
     return dict(new_df)
 
 def _join_df_col(df1,df2):
-    df3 = df1.join(df2)
+    df3 = df1.merge(df2)
     df3.fillna(0, inplace=True)
     return df3.astype('int32')
     
@@ -81,47 +81,66 @@ class InvertedIndex:
         for token in self.getAllPos():
             rStr += f'\nToken: {token}'
             for docId in self.getAllPos()[token]:
-                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])}\n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])} \
+                \n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
     #Write inverted index to multiple shelve files
-    def write(self, filePath:str = 'DevShelve', count:int = 1) -> None:
+    def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
         with shelve.open(f'{filePath}/index', 'c') as shelf:
             shelf[f'index{count}'] = self.getAllPos()
             shelf[f'weight{count}'] = self.getAllFields()
 
-        # df = _df_from_dict(self._positions)
-        # self._positions.clear()
+        #Write pos index to file using Pos{count} as key
+        # df = _df_from_dict(self.getAllPos())
         # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
 
         #Write field index to file using fields{count} as key
-        # df = _df_from_dict(self._weights)
-        # self._weights.clear()
+        # df = _df_from_dict(self.getAllFields())
         # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+
+    def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            # self._positions = shelf[f'index{count}']
+            tempShelve = None
+            for i in range(1,count+1):
+                tempShelve = shelf[f'index{i}']
+                for word in words:
+                    if word in tempShelve:
+                        if word in self._positions:
+                            self._positions[word].update(tempShelve[word])
+                        else:
+                            self._positions[word] = tempShelve[word]
+    
+    def loadAll(self, filePath:str = 'Shelve', count:int = 1):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            self._positions.update(shelf[f'index{count}'])
 
     #Clear inverted index
     def clear(self):
-        self._positions.clear()
-        self._weights.clear()
+        self._index.clear()
     
 class WeightFlags:
     def __init__(self) -> None:
-        #Field not defined is considered normal(n) weight
+        #Field not defined is considered normal weight
         self._fields = {'title', 'header', 'footer',
                        'h1','h2','h3','h4','h5','h6',
+                       's', #strikethrough
+                       'strike', #strikethrough
                        'i', #italic
-                       'b','strong','em','a'}
+                       'b','strong','em','a','article',
+                       'caption','nav','menu','cite'}
         self._setFields = set()
     
     #Getters
     def isWeight(self,field:str) -> bool:
-        return field in self._fields
+        return field in self._fields;
 
     def getActiveFields(self) -> set():
         if len(self._setFields) == 0:
-            return {'n'}
+            return {'normal'}
         return self._setFields
 
     #Setters
@@ -171,7 +190,7 @@ class HTMLTokenizer(HTMLParser):
     def clear(self):
         self._pos = 1
         self._weights.clearFields()
-
+    
     def getDocLen(self):
         return self._pos
     
