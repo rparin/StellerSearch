@@ -79,8 +79,7 @@ def getJsonFiles(rootDir):
 def main() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = getJsonFiles(rootDir)
-    parsedUrl = set()
-
+    
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
     docId = 1
@@ -108,13 +107,12 @@ def main() -> None:
                 docFile.close()
                 skip = True
 
-            if skip or (url in parsedUrl):
+            if skip:
                 print(f'Parsed Already or Encoding issue -- {docId}')
             else:
                 # Cleans and parses HTML content into tokens then adds it to Inverted index
                 docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
                 writeDoc(docId, url, docLen)
-                parsedUrl.add(url)
                 print(docId, url)
                 
                 if isMemoryFull():
@@ -125,15 +123,13 @@ def main() -> None:
 
                 docId += 1
 
-    if url not in parsedUrl:
-        if docId != getDocNum():
-            writeData(invIndex, docId, count)
-            writeDoc(docId, url, docLen)
-            count += 1
-            invIndex.clear()
-            invIndex = InvertedIndex()
+    if docId != getDocNum():
+        writeData(invIndex, docId, count)
+        count += 1
+        invIndex.clear()
+        invIndex = InvertedIndex()
     else:
-        print(f'Parsed Already or Encoding issue -- {docId}, {url}')
+        print(f'----Parsed Already----- {docId}, {url}')
 
 def test() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
