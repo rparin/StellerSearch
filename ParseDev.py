@@ -51,11 +51,11 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .125):
+    if fileSize + ramUsedGb >= (totalRam * .11):
         return False
     return True
 
-def isMemoryFull(limit=125): #dont go over 17.5
+def isMemoryFull(limit=11):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
@@ -79,7 +79,7 @@ def getJsonFiles(rootDir):
 def main() -> None:
     rootDir = '/home/rparin/CS121/HW3/DEV'
     jsonFiles = getJsonFiles(rootDir)
-    
+
     #Create inverted index to hold tokens from parser
     invIndex = InvertedIndex() 
     docId = 1
