@@ -7,13 +7,18 @@ def df_from_dict(dictObj:dict):
 
 def main():
     warnings.filterwarnings('ignore')
+    docUrl = {}
+
     with open("docId.txt") as inFile:
         for line in inFile:
             parsed = line.split()
-            docId = parsed[0]
-            df = df_from_dict({docId:parsed[1]})
-            df.to_hdf(f'DevHDF5/Url.hdf5', key=docId)
-            print(docId)
+            docUrl[int(parsed[0])] = parsed[1]
+            
+    for docId in docUrl:
+        df = df_from_dict({docId:docUrl[docId]})
+        df.to_hdf(f'DevHDF5/Url.hdf5', key=str(docId))
+        print(docId)
+
 
 if __name__ == "__main__":
     main()
