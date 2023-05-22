@@ -8,7 +8,10 @@ def df_from_dict(dictObj:dict):
 def main():
     warnings.filterwarnings('ignore')
     docUrl = {}
-    start = 4485
+    start = 5000
+    split = 4300
+    count = 0
+    fCount = 2
     with open("docId.txt") as inFile:
         for line in inFile:
             parsed = line.split()
@@ -17,8 +20,12 @@ def main():
             
     for docId in docUrl:
         df = df_from_dict({docId:docUrl[docId]})
-        df.to_hdf(f'DevHDF5/Url2.hdf5', key=str(docId))
+        df.to_hdf(f'DevHDF5/Url{fCount}.hdf5', key=str(docId))
         print(docId, docUrl[docId])
+        count += 1
+        if count > split:
+            count = 0
+            fCount += 1
 
 
 if __name__ == "__main__":
