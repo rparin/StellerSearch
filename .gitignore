@@ -2,6 +2,7 @@
 /Shelve
 /DevShelve
 /DevHDF5
+/Data
 __pycache__/
 *.py[cod]
 *$py.class
