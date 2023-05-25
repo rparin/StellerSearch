@@ -31,3 +31,4 @@ def tokenizeHtml(docId:int, invIndex:InvertedIndex, htmlContent:str):
     clean_html = cleanHtml(htmlContent)
     if clean_html:
         parser.feed(clean_html) #pass in clean html to parse
+    return parser.getDocLen()
