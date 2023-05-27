@@ -3,6 +3,7 @@ from nltk.stem import PorterStemmer
 import pandas as pd
 import re
 import shelve
+import json
 
 def _df_from_dict(dictObj:dict, toInt = False):
     df = pd.DataFrame.from_dict(dictObj, orient='index')
@@ -93,13 +94,19 @@ class InvertedIndex:
             shelf[f'index{count}'] = self.getAllPos()
             shelf[f'weight{count}'] = self.getAllFields()
 
-        #Write pos index to file using Pos{count} as key
-        # df = _df_from_dict(self.getAllPos())
-        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
-
-        #Write field index to file using fields{count} as key
-        # df = _df_from_dict(self.getAllFields())
-        # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
+        termDict = {}
+        for term in self._positions:
+            docList = list(self._positions[term])
+            dfCount = len(self._positions[term])
+            tDict = {'df':dfCount, 'tf':{}, 'docIds':list()}
+            for docId in self._positions[term]:
+                tDict['tf'].update({docId:len(self._positions[term][docId])})
+            tDict['docIds'] = docList
+            termDict[term] = json.dumps(tDict)
+        
+        with open(f'{filePath}/Posting{count}.txt', "w") as fp:
+            for term in termDict:
+                fp.write(f'{term}-{termDict[term]}\n')
 
     def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
         with shelve.open(f'{filePath}/index', 'c') as shelf:
@@ -120,7 +127,8 @@ class InvertedIndex:
 
     #Clear inverted index
     def clear(self):
-        self._index.clear()
+        self._positions.clear()
+        self._weights.clear()
     
 class WeightFlags:
     def __init__(self) -> None:

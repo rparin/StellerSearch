@@ -51,18 +51,18 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .11):
+    if fileSize + ramUsedGb >= (totalRam * .12):
         return False
     return True
 
-def isMemoryFull(limit=11):
+def isMemoryFull(limit=10.2):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
     return False
 
 def writeData(invIndex, docId, count):
-    invIndex.write('DevShelve', count)
+    invIndex.write('Data', count)
     invIndex.clear()
     storeDocNum(docId)
     print("----Wrote Data to File----")
