@@ -51,11 +51,11 @@ def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
     totalRam = psutil.virtual_memory().total/(1024*1024*1024)
-    if fileSize + ramUsedGb >= (totalRam * .12):
+    if fileSize + ramUsedGb >= (totalRam * .125):
         return False
     return True
 
-def isMemoryFull(limit=10.2):
+def isMemoryFull(limit=12.5):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
