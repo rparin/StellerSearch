@@ -1,25 +1,47 @@
 body {
-  background-image: url(../starry.gif);
+  background-image: url(/GUI/Images/starry.gif);
   background-repeat: repeat;
   
 }
 
-#search-container {
-  text-align: center;
-  margin-bottom: 20px;
+.search-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-bar {
+ width: 100%;
+ max-width: 45em;
+ background: rgba(255, 255, 255, 0.2);
+ display: flex;
+ align-items: center;
+ border-radius: 2em;
+ padding: 1em 2em;
 }
 
 #search-input {
-  width: 300px;
-  padding: 10px;
-  font-size: 16px;
-}
-
-#search-button {
-  padding: 10px 20px;
-  font-size: 16px;
+  background: transparent;
+  flex: 1;
+  border: 0;
+  outline: none;
+  font-size: 20px;
+  color: white;
 }
 
 #results-container {
   text-align: center;
+}
+
+#img-button {
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+}
+
+#search-img{
+    height: 3em;
 }
