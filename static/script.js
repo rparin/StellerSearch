@@ -1,5 +1,6 @@
 $(document).ready(function () {
   $("#img-button").click(function () {
-    $("#results-container").toggle();
+    $(".line").toggle(); // Toggle the visibility of the horizontal line
+    $(".results-container").toggle(); // Toggle the visibility of results container
   });
 });

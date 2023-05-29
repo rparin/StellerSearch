@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 
-# https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
+# Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
 app = Flask(__name__)
 
 
@@ -9,7 +9,7 @@ def home():
     urls = [
         "https://www.pokemon.com/us/pokedex/bulbasaur",
         "https://www.pokemon.com/us/pokedex/charmander",
-        "https://www.pokemon.com/us/pokedex/squirtle"
+        "https://www.pokemon.com/us/pokedex/squirtle",
     ]
     return render_template("index.html", urls=urls)
 

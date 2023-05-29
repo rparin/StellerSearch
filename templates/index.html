@@ -9,21 +9,25 @@
     <h1 id="search-name">StellarSearch</h1>
     <div class="search-container" id="search-container">
       <div class="search-bar">
-        <input
-          id="search-input"
-          type="text"
-          placeholder="Enter your search query"
-        />
-        <button id="img-button">
-          <img id="search-img" src="../static/images/starry_search.png" />
-        </button>
-      </div>
-      <div id="results-container" style="display: none">
-        <ul id="results-list">
-          {% for url in urls %}
-          <li><a href="{{ url }}">{{ url }}</a></li>
-          {% endfor %}
-        </ul>
+        <div class="input-container">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Enter your search query"
+          />
+          <button id="img-button">
+            <img id="search-img" src="../static/images/starry_search.png" />
+          </button>
+        </div>
+        <div class="results-container">
+          <hr class="line" />
+          <!-- Citation: https://www.geeksforgeeks.org/python-using-for-loop-in-flask/# -->
+          <ul id="results-list">
+            {% for url in urls %}
+            <li><a href="{{ url }}">{{ url }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
       </div>
     </div>
   </body>

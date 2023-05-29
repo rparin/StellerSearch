@@ -1,50 +1,42 @@
 body {
   background-image: url(../static/images/starry.gif);
   background-repeat: repeat;
-  font-family: 'Lucida Sans';
-}
-
-.search-container {
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  transition: height 0.3s;
-  overflow: hidden;
+  font-family: "Lucida Sans";
 }
 
 .search-bar {
   width: 100%;
   max-width: 45em;
   background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
   border-radius: 2em;
   padding: 1em 2em;
   margin: 0 auto;
-  transition: all 0.3s;
 }
 
-#search-name {
-  color: lavender;
-  text-align: center;
+.input-container {
+  display: flex;
+}
+
+.results-container {
+  display: none;
+}
+
+.line {
+  display: none;
+  width: 100%;
+  border: none;
+  border-top: 1px solid lavender;
+  margin-top: 0.5em;
 }
 
 #search-input {
   background: transparent;
-  flex: 1;
   border: 0;
   outline: none;
   font-size: 20px;
   color: white;
-  font-family: 'Lucida Sans';
-}
-
-#results-container {
-  background-color: lavender;
-  max-width: 45em;
-  border-radius: 2em;
-  padding: 1em 2em;
-  margin: 0 auto;
+  font-family: "Lucida Sans";
+  flex: 1;
 }
 
 #img-button {
@@ -52,14 +44,16 @@ body {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
+  margin-left: 0.5em;
+}
+
+#search-name {
+  color: lavender;
+  text-align: center;
 }
 
 #search-img {
   height: 3em;
-}
-
-#results-container {
-  margin-top: 1em;
 }
 
 #results-list {
@@ -73,7 +67,10 @@ body {
 }
 
 #results-list li a {
-  color: #333;
+  color: lavender;
   text-decoration: none;
-  font-weight: bold;
+}
+
+#results-list li a:hover {
+  text-decoration: underline;
 }
