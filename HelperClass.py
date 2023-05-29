@@ -1,5 +1,6 @@
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
+import json
 import pandas as pd
 import re
 import shelve
@@ -121,17 +122,24 @@ class InvertedIndex:
     def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
 
         #Write pos index to file using Pos{count} as key
-        with shelve.open(f'{filePath}/index', 'c') as shelf:
-            shelf[f'index{count}'] = self.getAllPos()
-            shelf[f'weight{count}'] = self.getAllFields()
+        # with shelve.open(f'{filePath}/index', 'c') as shelf:
+        #     shelf[f'index{count}'] = self.getAllPos()
+        #     shelf[f'weight{count}'] = self.getAllFields()
 
-        #Write pos index to file using Pos{count} as key
-        # df = _df_from_dict(self.getAllPos())
-        # df.to_hdf(f'{filePath}/Index.hdf5', key='pos'+str(count))
+        termDict = {}
+        for term in self._positions:
+            docList = list(self._positions[term])
+            dfCount = len(self._positions[term])
+            tDict = {'df':dfCount, 'tf':{}, 'docIds':list()}
+            for docId in self._positions[term]:
+                tDict['tf'].update({docId:len(self._positions[term][docId])})
+            tDict['docIds'] = docList
+            termDict[term] = json.dumps(tDict)
+        
+        with open(f'{filePath}/Posting{count}.txt', "w") as fp:
+            for term in termDict:
+                fp.write(f'{term}-{termDict[term]}\n')
 
-        #Write field index to file using fields{count} as key
-        # df = _df_from_dict(self.getAllFields())
-        # df.to_hdf(f'{filePath}/Index.hdf5', key='field'+str(count))
 
     def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
         with shelve.open(f'{filePath}/index', 'c') as shelf:
@@ -146,9 +154,18 @@ class InvertedIndex:
                         else:
                             self._positions[word] = tempShelve[word]
     
-    def loadAll(self, filePath:str = 'Shelve', count:int = 1):
+    def loadAll(self, filePath:str = 'Shelve', count:int = 10):
         with shelve.open(f'{filePath}/index', 'c') as shelf:
-            self._positions.update(shelf[f'index{count}'])
+            for i in range(1,count+1):
+                shelveDict = shelf[f'index{i}']
+                if i == 1:
+                    self._positions.update(shelveDict)
+                else:
+                    for term in shelveDict:
+                        if term in self._positions:
+                            self._positions[term].update(shelveDict[term])
+                        else:
+                            self._positions[term] = shelveDict[term]
 
     #Clear inverted index
     def clear(self):
