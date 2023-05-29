@@ -141,15 +141,13 @@ class InvertedIndex:
     
 class WeightFlags:
     def __init__(self) -> None:
-        #Field not defined is considered normal weight
-        self._fields = {'title', 'header', 'footer',
-                       'h1','h2','h3','h4','h5','h6',
-                       's', #strikethrough
-                       'strike', #strikethrough
-                       'i', #italic
-                       'b','strong','em','a','article',
-                       'caption','nav','menu','cite'}
+        self._norm = 'normal'
         self._setFields = set()
+        self._fields = {
+            'title': 4,
+            'header': 3,'h1': 3,'h2': 3,'b': 3,'strong': 3,'em': 3,
+            'h3': 2,'h4': 2,'h5': 2,'h6': 2,'i': 2
+        }
     
     #Getters
     def isWeight(self,field:str) -> bool:
@@ -157,8 +155,15 @@ class WeightFlags:
 
     def getActiveFields(self) -> set():
         if len(self._setFields) == 0:
-            return {'normal'}
+            return {self._norm}
         return self._setFields
+    
+    def getSum(self, weightDict:dict) -> int:
+        sumFields = 0
+        for field in weightDict:
+            if field != self._norm:
+                sumFields += self._fields[field]
+        return sumFields
 
     #Setters
     def setField(self, field:str) -> None:
