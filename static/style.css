@@ -1,5 +1,5 @@
 body {
-  background-image: url(/GUI/Images/starry.gif);
+  background-image: url(../static/images/starry.gif);
   background-repeat: repeat;
   font-family: 'Lucida Sans'
 }
