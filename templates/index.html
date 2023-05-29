@@ -2,11 +2,13 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="../static/style.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../static/script.js"></script>
   </head>
   <body>
     <h1 id="search-name">StellarSearch</h1>
-    <div class="search-container">
-      <form action="" class="search-bar">
+    <div class="search-container" id="search-container">
+      <div class="search-bar">
         <input
           id="search-input"
           type="text"
@@ -15,14 +17,14 @@
         <button id="img-button">
           <img id="search-img" src="../static/images/starry_search.png" />
         </button>
-      </form>
-    </div>
-    <div id="results-container">
-      <ul id="results-list">
-        {% for url in urls %}
-        <li><a href="{{ url }}">{{ url }}</a></li>
-        {% endfor %}
-      </ul>
+      </div>
+      <div id="results-container" style="display: none">
+        <ul id="results-list">
+          {% for url in urls %}
+          <li><a href="{{ url }}">{{ url }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </body>
 </html>
