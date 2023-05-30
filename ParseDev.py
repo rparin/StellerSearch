@@ -8,7 +8,7 @@ from helper import tokenizeHtml
 def writeDoc(docId:str, url:str, docLen:int):
     docJson = json.dumps({'url': url, 'docLen':docLen})
     docFile = open("docId.txt", "a")
-    docFile.write(f'{docId}-{docJson}\n')
+    docFile.write(f'{docId}>{docJson}\n')
     docFile.close()
 
 def getDocNum():
