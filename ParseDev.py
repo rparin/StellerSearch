@@ -85,11 +85,12 @@ def main() -> None:
     for jFile in jsonFiles:
         #Write to file to save memory for next json
         if not isValidJsonSize(jFile):
-            writeData(invIndex, docId, count)
-            writeDoc(docId, url, docLen)
-            invIndex.clear()
-            invIndex = InvertedIndex() 
-            count += 1
+            if len(invIndex['pos']) != 0:
+                writeData(invIndex, docId, count)
+                writeDoc(docId, url, docLen)
+                invIndex.clear()
+                invIndex = InvertedIndex() 
+                count += 1
         else:
             #Dont Load json file, still too big after memory clear
             if not isValidJsonSize(jFile):
