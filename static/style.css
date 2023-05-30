@@ -72,5 +72,5 @@ body {
 }
 
 #results-list li a:hover {
-  text-decoration: underline;
+  background: rgba(255, 255, 255, 0.15);
 }
