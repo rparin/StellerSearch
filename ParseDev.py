@@ -6,11 +6,9 @@ from HelperClass import InvertedIndex
 from helper import tokenizeHtml
 
 def writeDoc(docId:str, url:str, docLen:int):
-    # with shelve.open(f'DevShelve/Url', 'c') as shelf:
-    #     shelf[str(docId)] = url
-
+    docJson = json.dumps({'url': url, 'docLen':docLen})
     docFile = open("docId.txt", "a")
-    docFile.write(f'{docId} {url} {docLen}\n')
+    docFile.write(f'{docId}-{docJson}\n')
     docFile.close()
 
 def getDocNum():
