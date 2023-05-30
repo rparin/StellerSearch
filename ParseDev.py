@@ -91,6 +91,7 @@ def main() -> None:
                 invIndex.clear()
                 invIndex = InvertedIndex() 
                 count += 1
+                docId += 1
         else:
             #Dont Load json file, still too big after memory clear
             if not isValidJsonSize(jFile):
