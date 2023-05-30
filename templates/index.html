@@ -23,8 +23,9 @@
           <hr class="line" />
           <!-- Citation: https://www.geeksforgeeks.org/python-using-for-loop-in-flask/# -->
           <ul id="results-list">
-            {% for url in urls %}
+            {% for url, summary in results %}
             <li><a href="{{ url }}">{{ url }}</a></li>
+            <p>{{ summary }}</p>
             {% endfor %}
           </ul>
         </div>
