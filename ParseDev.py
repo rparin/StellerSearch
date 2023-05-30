@@ -110,7 +110,7 @@ def main() -> None:
                     skip = True
 
                 if skip:
-                    print(f'Encoding issue -- {docId}')
+                    print(f'Encoding issue -- {jFile}')
                 else:
                     # Cleans and parses HTML content into tokens then adds it to Inverted index
                     docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
