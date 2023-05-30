@@ -1,6 +1,7 @@
 # Byte-compiled / optimized / DLL files
 /Shelve
 /DevShelve
+/DevShelve2
 /DevHDF5
 /Data
 __pycache__/

@@ -83,43 +83,45 @@ def main() -> None:
     docId = 1
     count = 1
     for jFile in jsonFiles:
+        #Write to file to save memory for next json
         if not isValidJsonSize(jFile):
             writeData(invIndex, docId, count)
             writeDoc(docId, url, docLen)
             invIndex.clear()
             invIndex = InvertedIndex() 
             count += 1
-
-        #Dont Load json file
-        if not isValidJsonSize(jFile):
-            docFile = open("InvalidJson.txt", "a")
-            docFile.write(f'{docId} {url}\n')
-            docFile.close()
         else:
-            skip = False
-            try:
-                url, htmlContent = getJsonData(jFile)
-            except:
-                docFile = open("HTMLContentErr.txt", "a")
+            #Dont Load json file, still too big after memory clear
+            if not isValidJsonSize(jFile):
+                docFile = open("InvalidJson.txt", "a")
                 docFile.write(f'{docId} {url}\n')
                 docFile.close()
-                skip = True
-
-            if skip:
-                print(f'Parsed Already or Encoding issue -- {docId}')
             else:
-                # Cleans and parses HTML content into tokens then adds it to Inverted index
-                docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
-                writeDoc(docId, url, docLen)
-                print(docId, url)
-                
-                if isMemoryFull():
-                    writeData(invIndex, docId, count)
-                    count += 1
-                    invIndex.clear()
-                    invIndex = InvertedIndex() 
+                skip = False
+                #Encoding issue with reading json
+                try:
+                    url, htmlContent = getJsonData(jFile)
+                except:
+                    docFile = open("HTMLContentErr.txt", "a")
+                    docFile.write(f'{docId} {url}\n')
+                    docFile.close()
+                    skip = True
 
-                docId += 1
+                if skip:
+                    print(f'Encoding issue -- {docId}')
+                else:
+                    # Cleans and parses HTML content into tokens then adds it to Inverted index
+                    docLen = tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
+                    writeDoc(docId, url, docLen)
+                    print(docId, url)
+                    
+                    if isMemoryFull():
+                        writeData(invIndex, docId, count)
+                        count += 1
+                        invIndex.clear()
+                        invIndex = InvertedIndex() 
+
+                    docId += 1
 
     if docId != getDocNum():
         writeData(invIndex, docId, count)
