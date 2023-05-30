@@ -105,7 +105,7 @@ def main() -> None:
                     url, htmlContent = getJsonData(jFile)
                 except:
                     docFile = open("HTMLContentErr.txt", "a")
-                    docFile.write(f'{docId} {url}\n')
+                    docFile.write(f'{jFile}\n')
                     docFile.close()
                     skip = True
 
