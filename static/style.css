@@ -1,0 +1,76 @@
+body {
+  background-image: url(../static/images/starry.gif);
+  background-repeat: repeat;
+  font-family: "Lucida Sans";
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 45em;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2em;
+  padding: 1em 2em;
+  margin: 0 auto;
+}
+
+.input-container {
+  display: flex;
+}
+
+.results-container {
+  display: none;
+}
+
+.line {
+  display: none;
+  width: 100%;
+  border: none;
+  border-top: 1px solid lavender;
+  margin-top: 0.5em;
+}
+
+#search-input {
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 20px;
+  color: white;
+  font-family: "Lucida Sans";
+  flex: 1;
+}
+
+#img-button {
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  margin-left: 0.5em;
+}
+
+#search-name {
+  color: lavender;
+  text-align: center;
+}
+
+#search-img {
+  height: 3em;
+}
+
+#results-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+#results-list li {
+  margin-bottom: 0.5em;
+}
+
+#results-list li a {
+  color: lavender;
+  text-decoration: none;
+}
+
+#results-list li a:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
