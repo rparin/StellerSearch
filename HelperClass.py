@@ -22,12 +22,50 @@ def _join_df_col(df1,df2):
     df3 = df1.merge(df2)
     df3.fillna(0, inplace=True)
     return df3.astype('int32')
+
+class WeightFlags:
+    def __init__(self) -> None:
+        self._norm = 'normal'
+        self._setFields = set()
+        self._fields = {
+            'title': 4,
+            'header': 3,'h1': 3,'h2': 3,'b': 3,'strong': 3,'em': 3,
+            'h3': 2,'h4': 2,'h5': 2,'h6': 2,'i': 2
+        }
+    
+    #Getters
+    def isWeight(self,field:str) -> bool:
+        return field in self._fields;
+
+    def getActiveFields(self) -> set():
+        if len(self._setFields) == 0:
+            return {self._norm}
+        return self._setFields
+    
+    def getSum(self, weightDict:dict) -> int:
+        sumFields = 0
+        for field in weightDict:
+            if field != self._norm:
+                sumFields += (self._fields[field] * len(weightDict[field]))
+        return sumFields
+
+    #Setters
+    def setField(self, field:str) -> None:
+        self._setFields.add(field)
+
+    def removeField(self, field:str) -> None:
+        if field in self._setFields:
+            self._setFields.remove(field)
+
+    def clearFields(self) -> None:
+        self._setFields.clear()
     
 #InvertedIndex is an object to hold term posting information
 class InvertedIndex:
     def __init__(self) -> None:
         self._positions = {}
         self._weights = {}
+        self._wFlag = WeightFlags()
 
     def addPosition(self, term:str, docId: int, pos:int):
         if term in self._positions:
@@ -98,9 +136,9 @@ class InvertedIndex:
         for term in self._positions:
             docList = list(self._positions[term])
             dfCount = len(self._positions[term])
-            tDict = {'df':dfCount, 'tf':{}, 'docIds':list()}
+            tDict = {'df':dfCount, 'wTf':{}, 'docIds':list()}
             for docId in self._positions[term]:
-                tDict['tf'].update({docId:len(self._positions[term][docId])})
+                tDict['wTf'].update({docId:len(self._positions[term][docId]) + self._wFlag.getSum(self._weights[term][docId])})
             tDict['docIds'] = docList
             termDict[term] = json.dumps(tDict)
         
@@ -137,44 +175,9 @@ class InvertedIndex:
 
     #Clear inverted index
     def clear(self):
-        self._index.clear()
-    
-class WeightFlags:
-    def __init__(self) -> None:
-        self._norm = 'normal'
-        self._setFields = set()
-        self._fields = {
-            'title': 4,
-            'header': 3,'h1': 3,'h2': 3,'b': 3,'strong': 3,'em': 3,
-            'h3': 2,'h4': 2,'h5': 2,'h6': 2,'i': 2
-        }
-    
-    #Getters
-    def isWeight(self,field:str) -> bool:
-        return field in self._fields;
-
-    def getActiveFields(self) -> set():
-        if len(self._setFields) == 0:
-            return {self._norm}
-        return self._setFields
-    
-    def getSum(self, weightDict:dict) -> int:
-        sumFields = 0
-        for field in weightDict:
-            if field != self._norm:
-                sumFields += self._fields[field]
-        return sumFields
-
-    #Setters
-    def setField(self, field:str) -> None:
-        self._setFields.add(field)
-
-    def removeField(self, field:str) -> None:
-        if field in self._setFields:
-            self._setFields.remove(field)
-
-    def clearFields(self) -> None:
-        self._setFields.clear()
+        self._positions.clear()
+        self._weights.clear()
+        self._wFlag.clearFields()
 
 class HTMLTokenizer(HTMLParser):
     def __init__(self, docId:int, invIndex:InvertedIndex, convert_charrefs: bool = True) -> None:
