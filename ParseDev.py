@@ -77,7 +77,7 @@ def getJsonFiles(rootDir):
     return jsonFiles
 
 def main() -> None:
-    rootDir = '/home/rparin/CS121/HW3/DEV'
+    rootDir = 'D:/RJ/UCI/Ralph School/2023 Spring/CS 121/Assignments/.vscode/Res/DEV'
     jsonFiles = getJsonFiles(rootDir)
 
     #Create inverted index to hold tokens from parser
@@ -132,7 +132,7 @@ def main() -> None:
         print(f'----Parsed Already----- {docId}, {url}')
 
 def test() -> None:
-    rootDir = 'D:\RJ\UCI\Ralph School\2023 Spring\CS 121\Assignments\.vscode\Res\DEV'
+    rootDir = 'D:/RJ/UCI/Ralph School/2023 Spring/CS 121/Assignments/.vscode/Res/DEV'
     jsonFiles = getJsonFiles(rootDir)
 
     docId = 1
