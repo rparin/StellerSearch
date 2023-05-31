@@ -24,10 +24,15 @@
           <!-- Citation: https://www.geeksforgeeks.org/python-using-for-loop-in-flask/# -->
           <ul id="results-list">
             {% for url, summary in results %}
-            <li><a href="{{ url }}">{{ url }}</a></li>
-            <p>{{ summary }}</p>
+            <li>
+              <div class="summary-container">
+                <a href="{{ url }}">{{ url }}</a>
+                <span id="info-icon">ℹ️</span>
+              </div>
+              <p>{{ summary }}</p>
+            </li>
             {% endfor %}
-          </ul>
+          </ul>          
         </div>
       </div>
     </div>

@@ -21,6 +21,11 @@ body {
   display: none;
 }
 
+.summary-container {
+  display: flex;
+  align-items: center;
+}
+
 .line {
   display: none;
   width: 100%;
@@ -73,4 +78,14 @@ body {
 
 #results-list li a:hover {
   background: rgba(255, 255, 255, 0.15);
+}
+
+#results-list p {
+  display: none;
+  color: white;
+  margin-left: 2em;
+}
+
+#info-icon{
+  cursor: pointer;
 }
