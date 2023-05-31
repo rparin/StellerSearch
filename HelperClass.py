@@ -28,9 +28,9 @@ class WeightFlags:
         self._norm = 'normal'
         self._setFields = set()
         self._fields = {
-            'title': 4,
-            'header': 3,'h1': 3,'h2': 3,'b': 3,'strong': 3,'em': 3,
-            'h3': 2,'h4': 2,'h5': 2,'h6': 2,'i': 2
+            'title': 100,
+            'header': 80,'h1': 80,'h2': 80,'b': 80,'strong': 80,'em': 80,
+            'h3': 50,'h4': 50,'h5': 50,'h6': 50,'i': 50
         }
     
     #Getters
@@ -133,6 +133,7 @@ class InvertedIndex:
         #     shelf[f'weight{count}'] = self.getAllFields()
 
         termDict = {}
+        termList = []
         for term in self._positions:
             docList = list(self._positions[term])
             dfCount = len(self._positions[term])
@@ -141,9 +142,11 @@ class InvertedIndex:
                 tDict['wTf'].update({docId:len(self._positions[term][docId]) + self._wFlag.getSum(self._weights[term][docId])})
             tDict['docIds'] = docList
             termDict[term] = json.dumps(tDict)
-        
+            termList.append(term)
+            
+        termList.sort()
         with open(f'{filePath}/Posting{count}.txt', "w") as fp:
-            for term in termDict:
+            for term in termList:
                 fp.write(f'{term}-{termDict[term]}\n')
 
 

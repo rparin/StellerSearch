@@ -5,6 +5,7 @@
 /DevHDF5
 /Data
 /DataOld
+/DataWt
 __pycache__/
 *.py[cod]
 *$py.class
