@@ -89,3 +89,37 @@ body {
 #info-icon{
   cursor: pointer;
 }
+
+/*Citation: https://getbootstrap.com/docs/5.0/components/pagination/*/
+.pagination {
+  margin-top: 1em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination .page-item {
+  list-style: none;
+}
+
+.pagination .page-link {
+  display: inline-block;
+  padding: 0.5em;
+  color: lavender;
+  background-color: transparent;
+  border: 1px solid lavender;
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.pagination .page-link:hover {
+  background-color: lavender;
+  color: black
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #4a3368;
+  color: lavender;
+  border-color: #65468f;
+}
