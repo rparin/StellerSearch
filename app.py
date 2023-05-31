@@ -44,6 +44,7 @@ def home():
         "https://www.pokemon.com/us/pokedex/kakuna",
     ]
 
+    # Citation for pagination: https://pythonhosted.org/Flask-paginate/
     page = request.args.get(get_page_parameter(), type=int, default=1)
     offset_num_page = (page - 1) * 10
     paginated_urls = urls[offset_num_page:offset_num_page + 10]
