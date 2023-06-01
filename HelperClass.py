@@ -1,118 +1,175 @@
-from collections import defaultdict
 from html.parser import HTMLParser
+from nltk.stem import PorterStemmer
+import json
+import pandas as pd
 import re
+import shelve
 
-#Posting is an object to hold token information for a single document
-class Posting:
-    def __init__(self, tok:str) -> None:
-        self._tok = tok
-        self._positions = set()
+def _df_from_dict(dictObj:dict, toInt = False) -> pd.DataFrame:
+    """_A functions that takes in a dictionary object and converts it into a pandas
+    DataFrame. Any missing values are filled with 0. If the toInt in the 
+    function's parameter is set to true, than it can convert the data type to int32.
 
-    #Setters functions
-    def addPosition(self, pos:int) -> None:
-        self._positions.add(pos)
+    Args:
+        dictObj (dict): _description_
+        toInt (bool, optional): _description_. Defaults to False.
 
-    #Getter functions
-    def getToken(self) -> str:
-        return self._tok
+    Returns:
+        pd.DataFrame: A transposed DataFrame (indexes and columns)
+    """
+    df = pd.DataFrame.from_dict(dictObj, orient='index')
+    df.fillna(0, inplace=True)
+    if toInt: df = df.astype('int32')
+    return df.transpose()
 
-    #Overload bracket operator to allow access of positions and weights
-    #Example: postingObj['positions'] or postingObj['pos']
-    def __getitem__(self, key):
-        assert key == 'positions' or key == 'pos', f"{key} does NOT exist!"
-        return self._positions
+#Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
+def _dict_from_df(df: pd.DataFrame) -> dict:
+    """Takes in a DataFrame and coverts it back to a dictionary. It first transposes the
+    DataFrame, converts each row into a frozenset, and then converts each frozenset into
+    a set.
 
-    #Overload print function to print obj info
-    def __repr__(self) -> str:
-        wExists = False
-        rStr = f'\tToken: {self._tok}\n\t\tPositions:'
-        if len(self._positions) == 0:
-            rStr += ' None'
-        else:
-            rStr += f' {self._positions}'
-        return rStr
+    Args:
+        df (pd.DataFrame): A DataFrame
+
+    Returns:
+        dict: A dictionary
+    """
+    df = df.transpose()
+    series_set = df.apply(frozenset, axis=1)
+    new_df = series_set.apply(lambda a: set(a))
+    return dict(new_df)
+
+def _join_df_col(df1:pd.DataFrame,df2:pd.DataFrame) -> pd.DataFrame:
+    """Takes two DataFrames and merges them based on common columns.
+    Missing values in the resulting DataFrame are replaced with 0s.
+    The entire DataFrame is converted into int32 before returning.
+
+    Args:
+        df1 (pd.DataFrame): data frame #1
+        df2 (pd.DataFrame): data frame #2
+
+    Returns:
+        pd.DataFrame: A combined DataFrame of information from df1 and df2.
+    """
+    df3 = df1.merge(df2)
+    df3.fillna(0, inplace=True)
+    return df3.astype('int32')
     
-#Document is an object to hold doc weight and multiple postings
-class Document:
-    def __init__(self, docId:int) -> None:
-        self._docId = docId
-        self._weights = defaultdict(lambda: set())
-        self._postings = defaultdict(lambda: dict)
-    
-    #Setter functions
-    def addWeight(self, wType:str, pos:int) -> None:
-        self._weights[wType].add(pos)
-    
-    def addPosting(self, posting: Posting):
-        self._postings[posting.getToken()] = posting
-
-    #Getter functions
-    def getDocId(self):
-        return self._docId
-
-    def getWeights(self):
-        return self._weights
-    
-    #Setter functions
-    def setDocId(self, docId:int):
-        self._docId = docId
-
-    def __setitem__(self, key, newValue):
-        if newValue != None:
-            self._postings[key] = newValue
-
-    #Overload bracket operator to allow accessing posting obj
-    #Example: DocumentObj[tok:str]
-    def __getitem__(self, key):
-        #Add item if key does not exist
-        if key not in self._postings:
-            self._postings[key] = Posting(key)
-        return self._postings[key]
-    
-    def printWeights(self, getStr = False) -> None | str:
-        rStr = f'\tWeights:'
-        if len(self._weights) == 0:
-            rStr += 'None\n'
-        else:
-            for w in self._weights:
-                rStr += f'\n\t\t{w}:{self._weights[w]}'
-        if getStr: return rStr
-        print(rStr)
-
-    def __repr__(self) -> str:
-        rStr = f'DocId: {self._docId}\n'
-        rStr += self.printWeights(getStr=True)
-        for post in self._postings:
-            rStr += f'\n{self._postings[post]}'
-        return rStr
-    
-#InvertedIndex is an object to hold multiple document objects
+#InvertedIndex is an object to hold term posting information
 class InvertedIndex:
     def __init__(self) -> None:
-        self._index = defaultdict(lambda: dict)
-        self._size = 0
+        self._positions = {}
+        self._weights = {}
 
-    #Setter functions
-    def addDoc(self, doc:Document) -> None:
-        self._index[doc.getDocId()] = doc
-        self._size += 1
-
+    def addPosition(self, term:str, docId: int, pos:int):
+        if term in self._positions:
+            if docId in self._positions[term]:
+                self._positions[term][docId].add(pos)
+            else:
+                self._positions[term].update({docId: {pos}})
+        else:
+            self._positions[term] = {docId:{pos}}
+            
+    def addWeight(self, term:str, docId:int, field:str, pos:int):
+        if term in self._weights:
+            if docId in self._weights[term]:
+                if field in self._weights[term][docId]:
+                    self._weights[term][docId][field].add(pos)
+                else:
+                    self._weights[term][docId][field] = {pos}
+            else:
+                self._weights[term].update({docId:{field:{pos}}})
+        else:
+            self._weights[term] = {docId:{field:{pos}}}
+        
     #Getter functions
-    #Overload bracket operator to allow accessing inverted index doc and posting obj
-    #Example: InvertedIndexObj[docId:int]
-    def __getitem__(self, key):
-        assert key in self._index, f"Document {key} does NOT exist!"
-        return self._index[key]
+    def getTokenAmount(self) -> int:
+        return len(self._positions)
+    
+    def getAllPos(self) -> dict:
+        return self._positions
+    
+    def getAllFields(self) -> dict:
+        return self._weights
+    
+    #Overload in operator 
+    #Example: if token:str in InvertedIndexObj
+    def __contains__(self, token:str) -> bool:
+        return token in self._positions
 
-    def getSize(self):
-        return self._size
+    #Overload bracket operator to allow accessing inverted index doc and posting obj
+    #Example: InvertedIndexObj[token:str]
+    def __getitem__(self, postType:str):
+        assert postType == 'pos' or postType == 'field', f"Token info '{postType}' does NOT exist!"
+        
+        if postType == 'pos':
+            return self._positions
+        
+        if postType == 'field':
+            return self._weights
 
     #Overload print function to print obj info
     def __repr__(self) -> str:
-        rStr = f'Size: {self._size}\n'
-        for docId in self._index:
-            rStr += f'{self._index[docId]}\n'
+        rStr = f'Total Tokens: {self.getTokenAmount()}'
+        for token in self.getAllPos():
+            rStr += f'\nToken: {token}'
+            for docId in self.getAllPos()[token]:
+                rStr += f'\n\tDocId: {docId}, Freq: {len(self.getAllPos()[token][docId])} \
+                \n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
+    
+    #Write inverted index to multiple shelve files
+    def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
+
+        #Write pos index to file using Pos{count} as key
+        # with shelve.open(f'{filePath}/index', 'c') as shelf:
+        #     shelf[f'index{count}'] = self.getAllPos()
+        #     shelf[f'weight{count}'] = self.getAllFields()
+
+        termDict = {}
+        for term in self._positions:
+            docList = list(self._positions[term])
+            dfCount = len(self._positions[term])
+            tDict = {'df':dfCount, 'tf':{}, 'docIds':list()}
+            for docId in self._positions[term]:
+                tDict['tf'].update({docId:len(self._positions[term][docId])})
+            tDict['docIds'] = docList
+            termDict[term] = json.dumps(tDict)
+        
+        with open(f'{filePath}/Posting{count}.txt', "w") as fp:
+            for term in termDict:
+                fp.write(f'{term}-{termDict[term]}\n')
+
+
+    def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            # self._positions = shelf[f'index{count}']
+            tempShelve = None
+            for i in range(1,count+1):
+                tempShelve = shelf[f'index{i}']
+                for word in words:
+                    if word in tempShelve:
+                        if word in self._positions:
+                            self._positions[word].update(tempShelve[word])
+                        else:
+                            self._positions[word] = tempShelve[word]
+    
+    def loadAll(self, filePath:str = 'Shelve', count:int = 10):
+        with shelve.open(f'{filePath}/index', 'c') as shelf:
+            for i in range(1,count+1):
+                shelveDict = shelf[f'index{i}']
+                if i == 1:
+                    self._positions.update(shelveDict)
+                else:
+                    for term in shelveDict:
+                        if term in self._positions:
+                            self._positions[term].update(shelveDict[term])
+                        else:
+                            self._positions[term] = shelveDict[term]
+
+    #Clear inverted index
+    def clear(self):
+        self._index.clear()
     
 class WeightFlags:
     def __init__(self) -> None:
@@ -140,17 +197,20 @@ class WeightFlags:
         self._setFields.add(field)
 
     def removeField(self, field:str) -> None:
-        self._setFields.remove(field)
+        if field in self._setFields:
+            self._setFields.remove(field)
 
     def clearFields(self) -> None:
         self._setFields.clear()
 
 class HTMLTokenizer(HTMLParser):
-    def __init__(self, *, convert_charrefs: bool = True) -> None:
+    def __init__(self, docId:int, invIndex:InvertedIndex, convert_charrefs: bool = True) -> None:
         super().__init__(convert_charrefs=convert_charrefs)
+        self._docId = docId
+        self._invIndex = invIndex
         self._weights = WeightFlags()
-        self._doc = Document(0)
         self._pos = 1
+        self.stemmer = PorterStemmer()
 
     def handle_starttag(self, tag, attrs):
         if self._weights.isWeight(tag):
@@ -163,21 +223,23 @@ class HTMLTokenizer(HTMLParser):
     def handle_data(self, data):
         line = data.strip()
         if line != '':
-            for token in re.split('[^a-z0-9]', line.lower()):
-                if (token != ''):
-                    #Create posting and add to doc
-                    self._doc[token].addPosition(self._pos)
+            for aToken in re.split('[^a-z0-9]', line.lower()):
+                if (aToken != ''):
+                    token = self.stemmer.stem(aToken)
 
-                    #Add weight and position to doc
+                    #Add Position for given docId
+                    self._invIndex.addPosition(token, self._docId, self._pos)
+                    
+                    #Add Weight
                     for field in self._weights.getActiveFields():
-                        self._doc.addWeight(field,self._pos)
+                        self._invIndex.addWeight(token, self._docId, field, self._pos)
 
                     self._pos += 1
 
-    def getDoc(self):
-        return self._doc
-
     def clear(self):
-        self._doc = Document(0)
         self._pos = 1
         self._weights.clearFields()
+    
+    def getDocLen(self):
+        return self._pos
+    
