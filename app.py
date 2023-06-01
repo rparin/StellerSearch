@@ -1,14 +1,17 @@
 from flask import Flask, render_template, request
 from flask_paginate import Pagination, get_page_parameter
 import openai
+import asyncio
 
 # Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
 app = Flask(__name__)
 
 openai.api_key = 'REMOVED'
 
-# Citation: https://platform.openai.com/examples/default-tldr-summary
-def summarize_url(url):
+# Citation for openAI: https://platform.openai.com/examples/default-tldr-summary
+# Citation for async: https://testdriven.io/blog/flask-async/
+
+async def async_summarize_url(url):
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=f"Summarize the content from {url}",
@@ -26,7 +29,7 @@ def summarize_url(url):
 
 
 @app.route("/")
-def home():
+async def home():
     urls = [
         "https://www.pokemon.com/us/pokedex/bulbasaur",
         "https://www.pokemon.com/us/pokedex/ivysaur",
@@ -44,15 +47,18 @@ def home():
         "https://www.pokemon.com/us/pokedex/kakuna",
     ]
 
+    tasks = [async_summarize_url(url) for url in urls]
+    sites = await asyncio.gather(*tasks)
     # Citation for pagination: https://pythonhosted.org/Flask-paginate/
     page = request.args.get(get_page_parameter(), type=int, default=1)
     offset_num_page = (page - 1) * 10
     paginated_urls = urls[offset_num_page:offset_num_page + 10]
-    results = [(url, summarize_url(url)) for url in paginated_urls]
+    results = [(url, summary) for url, summary in zip(paginated_urls, sites)]
 
     pagination = Pagination(page=page, total=len(urls), urls_per_page=10)
 
     return render_template("index.html", results=results, pagination=pagination)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
