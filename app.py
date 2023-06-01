@@ -5,7 +5,7 @@ import openai
 # Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
 app = Flask(__name__)
 
-openai.api_key = "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"
+openai.api_key = 'REMOVED'
 
 # Citation: https://platform.openai.com/examples/default-tldr-summary
 def summarize_url(url):
