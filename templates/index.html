@@ -1,34 +1,10 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="../static/style.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../static/script.js"></script>
-  </head>
-  <body>
-    <h1 id="search-name">StellarSearch</h1>
-    <div class="search-container" id="search-container">
-      <div class="search-bar">
-        <div class="input-container">
-          <input
-            id="search-input"
-            type="text"
-            placeholder="Enter your search query"
-          />
-          <button id="img-button">
-            <img id="search-img" src="../static/images/starry_search.png" />
-          </button>
-        </div>
-        <div class="results-container">
-          <hr class="line" />
-          <!-- Citation: https://www.geeksforgeeks.org/python-using-for-loop-in-flask/# -->
-          <ul id="results-list">
-            {% for url in urls %}
-            <li><a href="{{ url }}">{{ url }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+
+{% for url in result_urls %}
+  <p> {{ url }} </p>
+{% endfor %}
+
+{% for summary in summaries %}
+  <p> {{ summary }} </p>
+{% endfor %}
+    
