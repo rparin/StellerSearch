@@ -30,7 +30,8 @@ class WeightFlags:
         self._fields = {
             'title': 100,
             'header': 80,'h1': 80,'h2': 80,'b': 80,'strong': 80,'em': 80,
-            'h3': 50,'h4': 50,'h5': 50,'h6': 50,'i': 50
+            'h3': 50,'h4': 50,'h5': 50,'h6': 50,'i': 50,
+            self._norm: 0
         }
     
     #Getters
@@ -188,7 +189,8 @@ class HTMLTokenizer(HTMLParser):
         self._docId = docId
         self._invIndex = invIndex
         self._weights = WeightFlags()
-        self._pos = 1
+        self._pos = 0
+        self._weightVal = 0
         self.stemmer = PorterStemmer()
 
     def handle_starttag(self, tag, attrs):
@@ -212,13 +214,15 @@ class HTMLTokenizer(HTMLParser):
                     #Add Weight
                     for field in self._weights.getActiveFields():
                         self._invIndex.addWeight(token, self._docId, field, self._pos)
+                        self._weightVal += self._weights._fields[field]
 
                     self._pos += 1
 
     def clear(self):
-        self._pos = 1
+        self._pos = 0
+        self._weightVal = 0
         self._weights.clearFields()
     
     def getDocLen(self):
-        return self._pos
+        return self._pos + self._weightVal
     
