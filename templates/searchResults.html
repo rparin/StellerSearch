@@ -23,7 +23,7 @@
     </div>
 
     <div class="result-text">
-      <h2>Your search results for <u>{{userQuery}}</u> are:</h2>
+      <h2>Your search results for <u id="userQuery">{{userQuery}}</u> are:</h2>
       <h3>Took about {{timeElapsed}} ms</h3>
     </div>
 
@@ -38,15 +38,14 @@
         perspiciatis itaque excepturi sapiente laudantium illo quasi explicabo
         officia eum nisi, eveniet ea.
       </p>
-      <!-- <h2>{{i+1}}. <a href="{{results[i][0]}}">{{results[i][0]}}</a></h2>
-      <p>{{results[i][1]}}</p> -->
     </div>
     {% endfor %}
 
+
     <!-- Cite: https://getcssscan.com/css-buttons-examples -->
     <div class="page-button-container">
-      <button class="button-64">Prev</button>
-      <button class="button-64">Next</button>
+      <a href={{url_for('prevPage')}}><button class="button-64">Prev</button></a>
+      <a href={{url_for('nextPage')}}><button class="button-64">Next</button></a>
     </div>
   </body>
 </html>

@@ -228,7 +228,7 @@ class QueryParser:
             print(tup[1], url, tup[0])
 
     def getCosRank(self, amt = 10, ignore:set = set()) -> list:
-        tfIdf_doc_amt = min(len(self._docIds), 20)
+        tfIdf_doc_amt = min(len(self._docIds), 15)
         docRanks = self.getTf_IdfRank(tfIdf_doc_amt, False, ignore=ignore)
         queryVec = self._getQVector()
         coRanks = []; heapify(coRanks)
