@@ -16,7 +16,7 @@ docFile = open('Data/docId.txt', "r")
 #Create query parser obj
 queryParser = QueryParser(indexFp, docIdFp, indexFile, docFile)
 
-# Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
+# Citation: https://www.geeksforgeeks.org/how-to-use-flask-session-in-python-flask/#
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
