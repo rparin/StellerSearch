@@ -120,12 +120,10 @@ class InvertedIndex:
         termDict = {}
         termList = []
         for term in self._positions:
-            docList = list(self._positions[term])
             dfCount = len(self._positions[term])
-            tDict = {'df':dfCount, 'wTf':{}, 'docIds':list()}
+            tDict = {'df':dfCount, 'wTf':{}}
             for docId in self._positions[term]:
                 tDict['wTf'].update({docId:len(self._positions[term][docId]) + self._wFlag.getSum(self._weights[term][docId])})
-            tDict['docIds'] = docList
             termDict[term] = json.dumps(tDict)
             termList.append(term)
             
