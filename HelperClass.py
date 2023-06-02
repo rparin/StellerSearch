@@ -1,10 +1,11 @@
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 from heapq import heapify, heappush, heappop
+import numpy as np
+from numpy.linalg import norm
 import json
 import math
 import re
-import pandas as pd
 import pyarrow.feather as feather
 
 class WeightFlags:
@@ -109,14 +110,8 @@ class InvertedIndex:
                 \n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
-    #Write inverted index to multiple shelve files
+    #Write inverted index to multiple txt files
     def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
-
-        #Write pos index to file using Pos{count} as key
-        # with shelve.open(f'{filePath}/index', 'c') as shelf:
-        #     shelf[f'index{count}'] = self.getAllPos()
-        #     shelf[f'weight{count}'] = self.getAllFields()
-
         termDict = {}
         termList = []
         for term in self._positions:
@@ -182,33 +177,48 @@ class HTMLTokenizer(HTMLParser):
         return self._pos + self._weightVal
     
 class QueryParser:
-    def __init__(self) -> None:
-        self._termFpDf = self._getFpDataframe('indexFp')
-        self._docFpDf = self._getFpDataframe('docIdFp')
+    def __init__(self, indexFp, docIdFp, indexFile, docFile) -> None:
+        self._termFpDf = self._getFpDataframe(indexFp)
+        self._docFpDf = self._getFpDataframe(docIdFp)
+        self._indexFile = indexFile
+        self._docFile = docFile
+        self._queryCount = None
+        self._queryDict = None
+        self._queryOrder = None
+        self._docIds = None
+
+    def runQuery(self, queryStr:str, ignore:set = set()) -> list:
+        self.setQuery(queryStr)
+        if self._queryCount['len'] == 1:
+            self._docIds = self._getCList()
+            return self.getCosRank(ignore=ignore)
+        else:
+            self._docIds = self._getDocIds()
+        return self.getTf_IdfRank(ignore=ignore)
 
     def setQuery(self, queryStr) -> None:
         self._queryCount:dict = {'terms':{}, 'len': 0}
         self._queryDict, self._queryOrder = self._stemQuery(queryStr)
-        self._docIds = self._getDocIds()
-
-    def getTf_IdfRank(self, amt = 10) -> list[tuple]:
+        
+    def getTf_IdfRank(self,  amt = 10, sort = True, ignore:set = set()) -> list[tuple]:
         docRanks = []; heapify(docRanks)
         tfSet = set()
         for docIdStr in self._docIds:
-            sumTf_Idf = 0
-            for term in self._queryDict:
-                sumTf_Idf += self._queryDict[term][docIdStr]
-            sumTf_Idf = round(sumTf_Idf, 5)
-            if sumTf_Idf not in tfSet:
-                if len(docRanks) < amt:
-                    heappush(docRanks, (sumTf_Idf,docIdStr))
-                    tfSet.add(sumTf_Idf)
-                else:
-                    if sumTf_Idf > docRanks[0][0]:
-                        heappop(docRanks)
+            if docIdStr not in ignore:
+                sumTf_Idf = 0
+                for term in self._queryDict:
+                    sumTf_Idf += self._queryDict[term][docIdStr]
+                sumTf_Idf = round(sumTf_Idf, 5)
+                if sumTf_Idf not in tfSet:
+                    if len(docRanks) < amt:
                         heappush(docRanks, (sumTf_Idf,docIdStr))
                         tfSet.add(sumTf_Idf)
-        docRanks.sort(reverse=True)
+                    else:
+                        if sumTf_Idf > docRanks[0][0]:
+                            heappop(docRanks)
+                            heappush(docRanks, (sumTf_Idf,docIdStr))
+                            tfSet.add(sumTf_Idf)
+        if sort: docRanks.sort(reverse=True)
         return docRanks
     
     def printTf_IdfRank(self) -> None:
@@ -217,25 +227,70 @@ class QueryParser:
             url = self._getDocData(int(tup[1]))['url']
             print(tup[1], url, tup[0])
 
-    def _getFpDataframe(self, fileName:str):
-        fpDf = None
-        with open(f'Data/{fileName}.feather', 'rb') as f:
-            fpDf = feather.read_feather(f)
+    def getCosRank(self, amt = 10, ignore:set = set()) -> list:
+        tfIdf_doc_amt = min(len(self._docIds), 20)
+        docRanks = self.getTf_IdfRank(tfIdf_doc_amt, False, ignore=ignore)
+        queryVec = self._getQVector()
+        coRanks = []; heapify(coRanks)
+        for tup in docRanks:
+            docIdStr = tup[1]
+            docVec = self._getDocVector(docIdStr)
+            coSim = round(self._calc_cos_sim(queryVec, docVec),5)
+            resTup = (coSim, docIdStr)
+            if len(coRanks) < amt:
+                heappush(coRanks, resTup)
+            else:
+                if coSim > coRanks[0][0]:
+                    heappop(coRanks)
+                    heappush(coRanks, resTup)
+        coRanks.sort(reverse=True)
+        return coRanks
+    
+    def printCosRank(self) -> None:
+        cosRank = self.getCosRank()
+        for tup in cosRank:
+            url = self._getDocData(int(tup[1]))['url']
+            print(tup[1], url, tup[0])
+
+    def _getQVector(self) -> list:
+        qVector = []
+        for tup in self._queryOrder:
+            term = tup[1]
+            idf = self._queryDict[term]['idf']
+            tfIdf = self._calculate_tf_idf(self._queryCount['terms'][term],idf)
+            qVector.append(tfIdf)
+        return qVector
+    
+    def _getDocVector(self, docIdStr:str) -> list:
+        docVector = []
+        for tup in self._queryOrder:
+            term = tup[1]
+            tfIdf = self._getTermData(term)[docIdStr]
+            docVector.append(tfIdf)
+        return docVector
+
+    def _calculate_tf_idf(self,tf, idf):
+        return ((1 + math.log(tf)) * idf)
+    
+    def _calc_cos_sim(self, A:list, B:list) -> float:
+        return np.dot(A,B)/(norm(A)*norm(B))
+
+    def _getFpDataframe(self, file):
+        fpDf = feather.read_feather(file)
         return fpDf
 
     def _getTermData(self, term:str):
-        return self._getData('Index', self._termFpDf, term)
+        return self._getData(self._indexFile, self._termFpDf, term)
     
     def _getDocData(self, docId:int):
-        return self._getData('docId', self._docFpDf, docId)
+        return self._getData(self._docFile, self._docFpDf, docId)
         
-    def _getData(self, fileName:str, fp:dict, value:str) -> dict:
+    def _getData(self, file, fp:dict, value:str) -> dict:
         dataInfo = None
         if value not in fp['fp']: return dataInfo
-        with open(f'Data/{fileName}.txt', "r") as indexFile:
-            indexFile.seek(fp['fp'][value])
-            tInfo = indexFile.readline().strip().split('>')[1]
-            return json.loads(tInfo) 
+        file.seek(fp['fp'][value])
+        tInfo = file.readline().strip().split('>')[1]
+        return json.loads(tInfo) 
     
     def _stemQuery(self, queryStr:str) -> dict:
         stemmer = PorterStemmer()
@@ -248,24 +303,36 @@ class QueryParser:
                     token = stemmer.stem(aToken)
                     if token not in queryDict:
                         termData = self._getTermData(token)
-                        self._queryCount['terms'][token] = 1
-                        self._queryCount['len'] += 1
                         if termData:
                             queryDict[token] = termData
                             heappush(intersectOrder, (termData['idf']*-1,token))
+                            self._queryCount['terms'][token] = 1
+                            self._queryCount['len'] += 1
                     else:
                         self._queryCount['terms'][token] += 1
                         self._queryCount['len'] += 1
         return queryDict, intersectOrder
     
     def _getDocIds(self) -> set:
-        intersection_keys = set()
+        intersection_keys = None
         for tup in self._queryOrder:
-            if len(intersection_keys) == 0:
-                intersection_keys = set(self._queryDict[tup[1]].keys())
+            term = tup[1]
+            if intersection_keys == None:
+                intersection_keys = set(self._queryDict[term].keys())
                 intersection_keys.remove('cList')
                 intersection_keys.remove('idf')
             else:
-                intersection_keys = intersection_keys & self._queryDict[tup[1]].keys()
+                intersection_keys = intersection_keys & self._queryDict[term].keys()
 
         return intersection_keys
+    
+    def _getCList(self) -> set:
+        cList_Intersection = None
+        for tup in self._queryOrder:
+            term = tup[1]
+            if cList_Intersection == None:
+                cList_Intersection = set(self._queryDict[term]['cList'])
+            else:
+                cList_Intersection = cList_Intersection & set(self._queryDict[term]['cList'])
+
+        return cList_Intersection
