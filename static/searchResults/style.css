@@ -112,6 +112,10 @@ body::-webkit-scrollbar {
   margin-bottom: 3rem;
 }
 
+.page-button-container a {
+  text-decoration: none;
+}
+
 /* Cite: https://getcssscan.com/css-buttons-examples */
 .button-64 {
   align-items: center;
