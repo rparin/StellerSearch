@@ -190,7 +190,8 @@ class QueryParser:
     def runQuery(self, queryStr:str, ignore:set = set()) -> list:
         self.setQuery(queryStr)
         if self._queryCount['len'] < 1: return []
-        if self._queryCount['len'] == 1:
+        term = self._queryOrder[0][1]
+        if self._queryCount['len'] == 1 and self._queryDict[term]['idf'] > 0.35:
             self._docIds = self._getCList()
             return self.getCosRank(ignore=ignore)
         else:
