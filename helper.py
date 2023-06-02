@@ -1,6 +1,8 @@
 from bs4 import UnicodeDammit
 from lxml.html.clean import Cleaner
 from HelperClass import InvertedIndex, HTMLTokenizer
+import pyarrow.feather as feather
+import json
 
 #Decode html string
 #Cite: https://lxml.de/elementsoup.html
@@ -32,3 +34,26 @@ def tokenizeHtml(docId:int, invIndex:InvertedIndex, htmlContent:str):
     if clean_html:
         parser.feed(clean_html) #pass in clean html to parse
     return parser.getDocLen()
+
+
+def getFpDataframe(fileName:str):
+    fpDf = None
+    with open(f'Data/{fileName}.feather', 'rb') as f:
+        fpDf = feather.read_feather(f)
+    return fpDf
+
+def getTermData(term:str, fpDf):
+    termInfo = None
+    if term not in fpDf['fp']: return termInfo
+    with open(f'Data/Index.txt', "r") as indexFile:
+        indexFile.seek(fpDf['fp'][term])
+        tInfo = indexFile.readline().strip().split('>')[1]
+        return json.loads(tInfo) 
+
+def getDocData(docId:int, fpDf):
+    docInfo = None
+    if docId not in fpDf['fp']: return docInfo
+    with open(f'Data/docId.txt', "r") as indexFile:
+        indexFile.seek(fpDf['fp'][docId])
+        tInfo = indexFile.readline().strip().split('>')[1]
+        return json.loads(tInfo) 
