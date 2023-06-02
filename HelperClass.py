@@ -189,6 +189,7 @@ class QueryParser:
 
     def runQuery(self, queryStr:str, ignore:set = set()) -> list:
         self.setQuery(queryStr)
+        if self._queryCount['len'] < 1: return []
         if self._queryCount['len'] == 1:
             self._docIds = self._getCList()
             return self.getCosRank(ignore=ignore)
