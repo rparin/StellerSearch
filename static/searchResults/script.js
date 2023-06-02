@@ -18,11 +18,13 @@ $(document).ready(function () {
 // Cite: https://codepen.io/jsstrn/pen/mMMmZB
 function resizeUrl() {
   const getFontSize = (textLength) => {
+    if (textLength > 120) {
+      return ".8em";
+    }
     if (textLength > 90) {
-      return ".7em";
+      return "1em";
     }
     if (textLength > 50) {
-      console.log(textLength);
       return "1.2em";
     }
   };

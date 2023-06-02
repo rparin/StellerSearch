@@ -21,9 +21,11 @@
           placeholder="Search..." />
       </form>
     </div>
-    <h2 class="result-text">
-      Your search results for <u>{{userQuery}}</u> are:
-    </h2>
+
+    <div class="result-text">
+      <h2>Your search results for <u>{{userQuery}}</u> are:</h2>
+      <h3>Took about {{timeElapsed}} ms</h3>
+    </div>
 
     {% for i in range(0, resultLen) %}
     <div class="result-container">

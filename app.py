@@ -1,5 +1,18 @@
-from flask import Flask, render_template, request, jsonify 
+from flask import Flask, render_template, request, jsonify
+from HelperClass import QueryParser
 import openai
+import time
+
+#Open Index of Index files
+indexFp = open("Data/indexFp.feather", "rb")
+docIdFp = open("Data/docIdFp.feather", "rb")
+
+#Open index files
+indexFile = open('Data/Index.txt', "r")
+docFile = open('Data/docId.txt', "r")
+
+#Create query parser obj
+queryParser = QueryParser(indexFp, docIdFp, indexFile, docFile)
 
 # Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
 app = Flask(__name__)
@@ -32,11 +45,17 @@ def home():
 
 @app.route('/query', methods=['POST']) 
 def query(): 
-    urls = [
-        'https://www.pokemon.com/us/pokedex/charmander'
-    ]
+    urls = []
     userQuery = request.form.get("searchQuery")
-    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = userQuery)
+    start = time.time_ns()
+    avoid = {}
+    results = queryParser.runQuery(userQuery, avoid)
+    for tup in results:
+        urls.append(queryParser._getDocData(int(tup[1]))['url'])
+    end = time.time_ns()
+
+    timeE = round((end - start) / (10**6),2) #Time in milliseconds
+    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = userQuery, timeElapsed = timeE)
 
 if __name__ == "__main__":
     app.run(debug=True)
