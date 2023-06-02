@@ -5,17 +5,6 @@ import openai
 import time
 import sys
 
-#Open Index of Index files
-indexFp = open("Data/indexFp.feather", "rb")
-docIdFp = open("Data/docIdFp.feather", "rb")
-
-#Open index files
-indexFile = open('Data/Index.txt', "r")
-docFile = open('Data/docId.txt', "r")
-
-#Create query parser obj
-queryParser = QueryParser(indexFp, docIdFp, indexFile, docFile)
-
 # Citation: https://www.geeksforgeeks.org/how-to-use-flask-session-in-python-flask/#
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
@@ -76,6 +65,28 @@ def calculatePage(queryParser, isNext):
 
 @app.route("/", methods =["GET", "POST"])
 def home():
+    global indexFp
+    global docIdFp
+    global indexFile
+    global docFile
+    global queryParser
+    global pages
+    global currentPage
+    global avoid
+    global userQuery
+
+    #Open Index of Index files
+    indexFp = open("Data/indexFp.feather", "rb")
+    docIdFp = open("Data/docIdFp.feather", "rb")
+
+    #Open index files
+    indexFile = open('Data/Index.txt', "r")
+    docFile = open('Data/docId.txt', "r")
+
+    #Create query parser obj
+    queryParser = QueryParser(indexFp, docIdFp, indexFile, docFile)
+    queryParser.runQuery('test')
+
     # results = [(url, summarize_url(url)) for url in urls]
     # return render_template("index.html", resultLen = len(urls), results = results)
     return render_template("home.html")
@@ -103,18 +114,17 @@ def query():
     session['userQuery'] = userQuery
 
     timeE = round((end - start) / (10**6),3) #Time in milliseconds
-    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = userQuery, timeElapsed = timeE)
+    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = userQuery, timeElapsed = timeE, curPage = session['currentPage'])
 
 @app.route('/next', methods =["GET", "POST"]) 
 def nextPage():
     timeE, urls = calculatePage(queryParser, True)
-    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = session['userQuery'], timeElapsed = timeE)
+    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = session['userQuery'], timeElapsed = timeE, curPage = session['currentPage'])
 
 @app.route('/prev', methods =["GET", "POST"]) 
 def prevPage():
-    queryParser = QueryParser(indexFp, docIdFp, indexFile, docFile)
     timeE, urls = calculatePage(queryParser, False)
-    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = session['userQuery'], timeElapsed = timeE)
+    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = session['userQuery'], timeElapsed = timeE, curPage = session['currentPage'])
 
 if __name__ == "__main__":
     app.run(debug=True)

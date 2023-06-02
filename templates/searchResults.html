@@ -44,8 +44,12 @@
 
     <!-- Cite: https://getcssscan.com/css-buttons-examples -->
     <div class="page-button-container">
+      {% if curPage != 1 %}
       <a href={{url_for('prevPage')}}><button class="button-64">Prev</button></a>
+      {% endif %}
+      {% if resultLen != 0 %}
       <a href={{url_for('nextPage')}}><button class="button-64">Next</button></a>
+      {% endif %}
     </div>
   </body>
 </html>
