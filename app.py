@@ -70,10 +70,6 @@ def home():
     global indexFile
     global docFile
     global queryParser
-    global pages
-    global currentPage
-    global avoid
-    global userQuery
 
     #Open Index of Index files
     indexFp = open("Data/indexFp.feather", "rb")
