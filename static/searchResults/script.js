@@ -12,8 +12,29 @@ $(document).ready(function () {
     }
   });
 
+  getSummaries();
   resizeUrl();
 });
+
+//Cite: https://www.geeksforgeeks.org/pass-javascript-variables-to-python-in-flask/
+async function getSummaries() {
+  const urls = document.querySelectorAll(".result-container h2 a");
+  const summaries = document.querySelectorAll(".result-container p");
+
+  for (let i = 0; i < summaries.length; i++) {
+    $.ajax({
+      url: "/summary",
+      type: "POST",
+      data: { data: urls[i].innerHTML },
+      success: function (response) {
+        summaries[i].innerHTML = response;
+      },
+      error: function (error) {
+        console.log(error);
+      },
+    });
+  }
+}
 
 // Cite: https://codepen.io/jsstrn/pen/mMMmZB
 function resizeUrl() {

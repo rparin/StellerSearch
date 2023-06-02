@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, session
+from flask import Flask, request, render_template, session, jsonify
 from flask_session import Session
 from HelperClass import QueryParser
 import openai
@@ -121,6 +121,11 @@ def nextPage():
 def prevPage():
     timeE, urls = calculatePage(queryParser, False)
     return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = session['userQuery'], timeElapsed = timeE, curPage = session['currentPage'])
+
+@app.route('/summary', methods=['POST']) 
+def getSummary():
+    url = request.form.get('data')
+    return summarize_url(url)
 
 if __name__ == "__main__":
     app.run(debug=True)
