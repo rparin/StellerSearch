@@ -2,6 +2,7 @@
 /DevShelve
 /DevHDF5
 /Data
+/flask_session
 
 # Byte-compiled / optimized / DLL files
 /Shelve
