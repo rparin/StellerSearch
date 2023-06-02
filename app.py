@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request
-from flask_paginate import Pagination, get_page_parameter
+from flask import Flask, render_template, request, jsonify 
 import openai
 
 # Citation: https://www.geeksforgeeks.org/live-search-using-flask-and-jquery/#
@@ -25,34 +24,19 @@ def summarize_url(url):
     return summary
 
 
-@app.route("/")
+@app.route("/", methods =["GET", "POST"])
 def home():
+    # results = [(url, summarize_url(url)) for url in urls]
+    # return render_template("index.html", resultLen = len(urls), results = results)
+    return render_template("home.html")
+
+@app.route('/query', methods=['POST']) 
+def query(): 
     urls = [
-        "https://www.pokemon.com/us/pokedex/bulbasaur",
-        "https://www.pokemon.com/us/pokedex/ivysaur",
-        "https://www.pokemon.com/us/pokedex/venusaur",
-        "https://www.pokemon.com/us/pokedex/charmander",
-        "https://www.pokemon.com/us/pokedex/charmeleon",
-        "https://www.pokemon.com/us/pokedex/charizard",
-        "https://www.pokemon.com/us/pokedex/squirtle",
-        "https://www.pokemon.com/us/pokedex/wartortle",
-        "https://www.pokemon.com/us/pokedex/blastoise",
-        "https://www.pokemon.com/us/pokedex/caterpie",
-        "https://www.pokemon.com/us/pokedex/metapod",
-        "https://www.pokemon.com/us/pokedex/butterfree",
-        "https://www.pokemon.com/us/pokedex/weedle",
-        "https://www.pokemon.com/us/pokedex/kakuna",
+        'https://www.pokemon.com/us/pokedex/charmander'
     ]
-
-    # Citation for pagination: https://pythonhosted.org/Flask-paginate/
-    page = request.args.get(get_page_parameter(), type=int, default=1)
-    offset_num_page = (page - 1) * 10
-    paginated_urls = urls[offset_num_page:offset_num_page + 10]
-    results = [(url, summarize_url(url)) for url in paginated_urls]
-
-    pagination = Pagination(page=page, total=len(urls), urls_per_page=10)
-
-    return render_template("index.html", results=results, pagination=pagination)
+    userQuery = request.form.get("searchQuery")
+    return render_template("searchResults.html", resultLen = len(urls), results = urls, userQuery = userQuery)
 
 if __name__ == "__main__":
     app.run(debug=True)
