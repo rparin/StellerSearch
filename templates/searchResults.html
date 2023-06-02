@@ -29,8 +29,9 @@
 
     {% for i in range(0, resultLen) %}
     <div class="result-container">
+
       <h2>
-        {{i+1}}. <a target="_blank" href="{{results[i]}}">{{results[i]}}</a>
+        {{(i+1 * (curPage * 10))-9}}. <a target="_blank" href="{{results[i]}}">{{results[i]}}</a>
       </h2>
       <p>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Numquam
