@@ -20,16 +20,6 @@ def getDocNum():
 def storeDocNum(totalDoc:int):
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
         shelf['totalDoc'] = totalDoc
-
-def readDocShelve(key):
-    with shelve.open(f'DevShelve/Url', 'c') as shelf:
-        return shelf[key]
-
-def getDocUrl(docId:int):
-    return 'a'
-    with shelve.open(f'DevShelve/Url', 'c') as shelf:
-        if str(docId) in shelf:
-            return shelf[str(docId)]
         
 # Opening JSON file
 def getJsonData(filePath):
@@ -132,17 +122,6 @@ def main() -> None:
         invIndex = InvertedIndex()
     else:
         print(f'----Parsed Already----- {docId}, {url}')
-
-def test() -> None:
-    rootDir = 'D:/RJ/UCI/Ralph School/2023 Spring/CS 121/Assignments/.vscode/Res/DEV'
-    jsonFiles = getJsonFiles(rootDir)
-
-    docId = 1
-    url, htmlContent = getJsonData(jsonFiles[docId-1])
-    print(url)
-    invIndex = InvertedIndex() #Create inverted index to hold tokens from parser
-    tokenizeHtml(docId=docId, invIndex=invIndex, htmlContent=htmlContent)
-    print(invIndex)
 
 if __name__ == "__main__":
     main()
