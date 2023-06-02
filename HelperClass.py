@@ -1,65 +1,57 @@
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
+from heapq import heapify, heappush, heappop
+import numpy as np
+from numpy.linalg import norm
 import json
-import pandas as pd
+import math
 import re
-import shelve
+import pyarrow.feather as feather
 
-def _df_from_dict(dictObj:dict, toInt = False) -> pd.DataFrame:
-    """_A functions that takes in a dictionary object and converts it into a pandas
-    DataFrame. Any missing values are filled with 0. If the toInt in the 
-    function's parameter is set to true, than it can convert the data type to int32.
+class WeightFlags:
+    def __init__(self) -> None:
+        self._norm = 'normal'
+        self._setFields = set()
+        self._fields = {
+            'title': 100,
+            'header': 80,'h1': 80,'h2': 80,'b': 80,'strong': 80,'em': 80,
+            'h3': 50,'h4': 50,'h5': 50,'h6': 50,'i': 50,
+            self._norm: 0
+        }
+    
+    #Getters
+    def isWeight(self,field:str) -> bool:
+        return field in self._fields;
 
-    Args:
-        dictObj (dict): _description_
-        toInt (bool, optional): _description_. Defaults to False.
+    def getActiveFields(self) -> set():
+        if len(self._setFields) == 0:
+            return {self._norm}
+        return self._setFields
+    
+    def getSum(self, weightDict:dict) -> int:
+        sumFields = 0
+        for field in weightDict:
+            if field != self._norm:
+                sumFields += (self._fields[field] * len(weightDict[field]))
+        return sumFields
 
-    Returns:
-        pd.DataFrame: A transposed DataFrame (indexes and columns)
-    """
-    df = pd.DataFrame.from_dict(dictObj, orient='index')
-    df.fillna(0, inplace=True)
-    if toInt: df = df.astype('int32')
-    return df.transpose()
+    #Setters
+    def setField(self, field:str) -> None:
+        self._setFields.add(field)
 
-#Cite: https://stackoverflow.com/questions/47545052/convert-dataframe-rows-to-python-set
-def _dict_from_df(df: pd.DataFrame) -> dict:
-    """Takes in a DataFrame and coverts it back to a dictionary. It first transposes the
-    DataFrame, converts each row into a frozenset, and then converts each frozenset into
-    a set.
+    def removeField(self, field:str) -> None:
+        if field in self._setFields:
+            self._setFields.remove(field)
 
-    Args:
-        df (pd.DataFrame): A DataFrame
-
-    Returns:
-        dict: A dictionary
-    """
-    df = df.transpose()
-    series_set = df.apply(frozenset, axis=1)
-    new_df = series_set.apply(lambda a: set(a))
-    return dict(new_df)
-
-def _join_df_col(df1:pd.DataFrame,df2:pd.DataFrame) -> pd.DataFrame:
-    """Takes two DataFrames and merges them based on common columns.
-    Missing values in the resulting DataFrame are replaced with 0s.
-    The entire DataFrame is converted into int32 before returning.
-
-    Args:
-        df1 (pd.DataFrame): data frame #1
-        df2 (pd.DataFrame): data frame #2
-
-    Returns:
-        pd.DataFrame: A combined DataFrame of information from df1 and df2.
-    """
-    df3 = df1.merge(df2)
-    df3.fillna(0, inplace=True)
-    return df3.astype('int32')
+    def clearFields(self) -> None:
+        self._setFields.clear()
     
 #InvertedIndex is an object to hold term posting information
 class InvertedIndex:
     def __init__(self) -> None:
         self._positions = {}
         self._weights = {}
+        self._wFlag = WeightFlags()
 
     def addPosition(self, term:str, docId: int, pos:int):
         if term in self._positions:
@@ -118,90 +110,28 @@ class InvertedIndex:
                 \n\t\tPos: {self.getAllPos()[token][docId]}\n\t\tWeights: {self.getAllFields()[token][docId]}'
         return rStr
     
-    #Write inverted index to multiple shelve files
+    #Write inverted index to multiple txt files
     def write(self, filePath:str = 'Shelve', count:int = 1) -> None:
-
-        #Write pos index to file using Pos{count} as key
-        # with shelve.open(f'{filePath}/index', 'c') as shelf:
-        #     shelf[f'index{count}'] = self.getAllPos()
-        #     shelf[f'weight{count}'] = self.getAllFields()
-
         termDict = {}
+        termList = []
         for term in self._positions:
-            docList = list(self._positions[term])
             dfCount = len(self._positions[term])
-            tDict = {'df':dfCount, 'tf':{}, 'docIds':list()}
+            tDict = {'df':dfCount, 'wTf':{}}
             for docId in self._positions[term]:
-                tDict['tf'].update({docId:len(self._positions[term][docId])})
-            tDict['docIds'] = docList
+                tDict['wTf'].update({docId:len(self._positions[term][docId]) + self._wFlag.getSum(self._weights[term][docId])})
             termDict[term] = json.dumps(tDict)
-        
+            termList.append(term)
+            
+        termList.sort()
         with open(f'{filePath}/Posting{count}.txt', "w") as fp:
-            for term in termDict:
+            for term in termList:
                 fp.write(f'{term}-{termDict[term]}\n')
-
-
-    def load(self, words:list, filePath:str = 'Shelve', count:int = 1):
-        with shelve.open(f'{filePath}/index', 'c') as shelf:
-            # self._positions = shelf[f'index{count}']
-            tempShelve = None
-            for i in range(1,count+1):
-                tempShelve = shelf[f'index{i}']
-                for word in words:
-                    if word in tempShelve:
-                        if word in self._positions:
-                            self._positions[word].update(tempShelve[word])
-                        else:
-                            self._positions[word] = tempShelve[word]
-    
-    def loadAll(self, filePath:str = 'Shelve', count:int = 10):
-        with shelve.open(f'{filePath}/index', 'c') as shelf:
-            for i in range(1,count+1):
-                shelveDict = shelf[f'index{i}']
-                if i == 1:
-                    self._positions.update(shelveDict)
-                else:
-                    for term in shelveDict:
-                        if term in self._positions:
-                            self._positions[term].update(shelveDict[term])
-                        else:
-                            self._positions[term] = shelveDict[term]
 
     #Clear inverted index
     def clear(self):
-        self._index.clear()
-    
-class WeightFlags:
-    def __init__(self) -> None:
-        #Field not defined is considered normal weight
-        self._fields = {'title', 'header', 'footer',
-                       'h1','h2','h3','h4','h5','h6',
-                       's', #strikethrough
-                       'strike', #strikethrough
-                       'i', #italic
-                       'b','strong','em','a','article',
-                       'caption','nav','menu','cite'}
-        self._setFields = set()
-    
-    #Getters
-    def isWeight(self,field:str) -> bool:
-        return field in self._fields;
-
-    def getActiveFields(self) -> set():
-        if len(self._setFields) == 0:
-            return {'normal'}
-        return self._setFields
-
-    #Setters
-    def setField(self, field:str) -> None:
-        self._setFields.add(field)
-
-    def removeField(self, field:str) -> None:
-        if field in self._setFields:
-            self._setFields.remove(field)
-
-    def clearFields(self) -> None:
-        self._setFields.clear()
+        self._positions.clear()
+        self._weights.clear()
+        self._wFlag.clearFields()
 
 class HTMLTokenizer(HTMLParser):
     def __init__(self, docId:int, invIndex:InvertedIndex, convert_charrefs: bool = True) -> None:
@@ -209,7 +139,8 @@ class HTMLTokenizer(HTMLParser):
         self._docId = docId
         self._invIndex = invIndex
         self._weights = WeightFlags()
-        self._pos = 1
+        self._pos = 0
+        self._weightVal = 0
         self.stemmer = PorterStemmer()
 
     def handle_starttag(self, tag, attrs):
@@ -233,13 +164,177 @@ class HTMLTokenizer(HTMLParser):
                     #Add Weight
                     for field in self._weights.getActiveFields():
                         self._invIndex.addWeight(token, self._docId, field, self._pos)
+                        self._weightVal += self._weights._fields[field]
 
                     self._pos += 1
 
     def clear(self):
-        self._pos = 1
+        self._pos = 0
+        self._weightVal = 0
         self._weights.clearFields()
     
     def getDocLen(self):
-        return self._pos
+        return self._pos + self._weightVal
     
+class QueryParser:
+    def __init__(self, indexFp, docIdFp, indexFile, docFile) -> None:
+        self._termFpDf = self._getFpDataframe(indexFp)
+        self._docFpDf = self._getFpDataframe(docIdFp)
+        self._indexFile = indexFile
+        self._docFile = docFile
+        self._queryCount = None
+        self._queryDict = None
+        self._queryOrder = None
+        self._docIds = None
+
+    def runQuery(self, queryStr:str, ignore:set = set()) -> list:
+        self.setQuery(queryStr)
+        if self._queryCount['len'] < 1: return []
+        term = self._queryOrder[0][1]
+        if self._queryCount['len'] == 1 and self._queryDict[term]['idf'] > 0.35:
+            self._docIds = self._getCList()
+            return self.getCosRank(ignore=ignore)
+        else:
+            self._docIds = self._getDocIds()
+        return self.getTf_IdfRank(ignore=ignore)
+
+    def setQuery(self, queryStr) -> None:
+        self._queryCount:dict = {'terms':{}, 'len': 0}
+        self._queryDict, self._queryOrder = self._stemQuery(queryStr)
+        
+    def getTf_IdfRank(self,  amt = 10, sort = True, ignore:set = set()) -> list[tuple]:
+        docRanks = []; heapify(docRanks)
+        tfSet = set()
+        for docIdStr in self._docIds:
+            if docIdStr not in ignore:
+                sumTf_Idf = 0
+                for term in self._queryDict:
+                    sumTf_Idf += self._queryDict[term][docIdStr]
+                sumTf_Idf = round(sumTf_Idf, 5)
+                if sumTf_Idf not in tfSet:
+                    if len(docRanks) < amt:
+                        heappush(docRanks, (sumTf_Idf,docIdStr))
+                        tfSet.add(sumTf_Idf)
+                    else:
+                        if sumTf_Idf > docRanks[0][0]:
+                            heappop(docRanks)
+                            heappush(docRanks, (sumTf_Idf,docIdStr))
+                            tfSet.add(sumTf_Idf)
+        if sort: docRanks.sort(reverse=True)
+        return docRanks
+    
+    def printTf_IdfRank(self) -> None:
+        docRanks = self.getTf_IdfRank()
+        for tup in docRanks:
+            url = self._getDocData(int(tup[1]))['url']
+            print(tup[1], url, tup[0])
+
+    def getCosRank(self, amt = 10, ignore:set = set()) -> list:
+        tfIdf_doc_amt = min(len(self._docIds), 15)
+        docRanks = self.getTf_IdfRank(tfIdf_doc_amt, False, ignore=ignore)
+        queryVec = self._getQVector()
+        coRanks = []; heapify(coRanks)
+        for tup in docRanks:
+            docIdStr = tup[1]
+            docVec = self._getDocVector(docIdStr)
+            coSim = round(self._calc_cos_sim(queryVec, docVec),5)
+            resTup = (coSim, docIdStr)
+            if len(coRanks) < amt:
+                heappush(coRanks, resTup)
+            else:
+                if coSim > coRanks[0][0]:
+                    heappop(coRanks)
+                    heappush(coRanks, resTup)
+        coRanks.sort(reverse=True)
+        return coRanks
+    
+    def printCosRank(self) -> None:
+        cosRank = self.getCosRank()
+        for tup in cosRank:
+            url = self._getDocData(int(tup[1]))['url']
+            print(tup[1], url, tup[0])
+
+    def _getQVector(self) -> list:
+        qVector = []
+        for tup in self._queryOrder:
+            term = tup[1]
+            idf = self._queryDict[term]['idf']
+            tfIdf = self._calculate_tf_idf(self._queryCount['terms'][term],idf)
+            qVector.append(tfIdf)
+        return qVector
+    
+    def _getDocVector(self, docIdStr:str) -> list:
+        docVector = []
+        for tup in self._queryOrder:
+            term = tup[1]
+            tfIdf = self._getTermData(term)[docIdStr]
+            docVector.append(tfIdf)
+        return docVector
+
+    def _calculate_tf_idf(self,tf, idf):
+        return ((1 + math.log(tf)) * idf)
+    
+    def _calc_cos_sim(self, A:list, B:list) -> float:
+        return np.dot(A,B)/(norm(A)*norm(B))
+
+    def _getFpDataframe(self, file):
+        fpDf = feather.read_feather(file)
+        return fpDf
+
+    def _getTermData(self, term:str):
+        return self._getData(self._indexFile, self._termFpDf, term)
+    
+    def _getDocData(self, docId:int):
+        return self._getData(self._docFile, self._docFpDf, docId)
+        
+    def _getData(self, file, fp:dict, value:str) -> dict:
+        dataInfo = None
+        if value not in fp['fp']: return dataInfo
+        file.seek(fp['fp'][value])
+        tInfo = file.readline().strip().split('>')[1]
+        return json.loads(tInfo) 
+    
+    def _stemQuery(self, queryStr:str) -> dict:
+        stemmer = PorterStemmer()
+        queryDict = {}
+        intersectOrder = []; heapify(intersectOrder)
+        line = queryStr.strip()
+        if line != '':
+            for aToken in re.split('[^a-z0-9]', line.lower()):
+                if (aToken != ''):
+                    token = stemmer.stem(aToken)
+                    if token not in queryDict:
+                        termData = self._getTermData(token)
+                        if termData:
+                            queryDict[token] = termData
+                            heappush(intersectOrder, (termData['idf']*-1,token))
+                            self._queryCount['terms'][token] = 1
+                            self._queryCount['len'] += 1
+                    else:
+                        self._queryCount['terms'][token] += 1
+                        self._queryCount['len'] += 1
+        return queryDict, intersectOrder
+    
+    def _getDocIds(self) -> set:
+        intersection_keys = None
+        for tup in self._queryOrder:
+            term = tup[1]
+            if intersection_keys == None:
+                intersection_keys = set(self._queryDict[term].keys())
+                intersection_keys.remove('cList')
+                intersection_keys.remove('idf')
+            else:
+                intersection_keys = intersection_keys & self._queryDict[term].keys()
+
+        return intersection_keys
+    
+    def _getCList(self) -> set:
+        cList_Intersection = None
+        for tup in self._queryOrder:
+            term = tup[1]
+            if cList_Intersection == None:
+                cList_Intersection = set(self._queryDict[term]['cList'])
+            else:
+                cList_Intersection = cList_Intersection & set(self._queryDict[term]['cList'])
+
+        return cList_Intersection

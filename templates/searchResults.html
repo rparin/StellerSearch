@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../static/searchResults/style.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../static/searchResults/script.js"></script>
+  </head>
+  <body>
+    <!-- https://www.quora.com/How-do-I-run-python-flask-file-when-click-a-HTML-button -->
+    <div class="search-bar">
+      <h1><a href="http://127.0.0.1:5000/">StellarSearch</a></h1>
+      <form action="http://127.0.0.1:5000/query" method="post">
+        <label for="search"></label>
+        <input
+          type="text"
+          id="search"
+          name="searchQuery"
+          placeholder="Search..." />
+      </form>
+    </div>
+
+    <div class="result-text">
+      <h3>Your search results for <u id="userQuery">{{userQuery}}</u> are:</h3>
+      <h5>(Took about {{timeElapsed}} ms)</h5>
+    </div>
+
+    {% for i in range(0, resultLen) %}
+    <div class="result-container">
+
+      <h2>
+        {{(i+1 * (curPage * 10))-9}}. <a target="_blank" href="{{results[i]}}">{{results[i]}}</a>
+      </h2>
+      <p>
+        Loading ...
+      </p>
+    </div>
+    {% endfor %}
+
+
+    <!-- Cite: https://getcssscan.com/css-buttons-examples -->
+    <div class="page-button-container">
+      {% if curPage != 1 %}
+      <a href={{url_for('prevPage')}}><button class="button-64">Prev</button></a>
+      {% endif %}
+      {% if resultLen != 0 %}
+      <a href={{url_for('nextPage')}}><button class="button-64">Next</button></a>
+      {% endif %}
+    </div>
+  </body>
+</html>
