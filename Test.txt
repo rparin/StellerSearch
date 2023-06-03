@@ -4,7 +4,7 @@ Format:
     C\E: Comment or explanation on how we improved our results or didn't need to
 
 1. ics majors
-    R: (Evaluating ranking performance: finding a particular website with general word query)
+    R: Evaluating ranking performance: finding a particular website with general word query
     C\E: Even with many possible results, the time it takes to search for the query is < 300 ms. At first we only did a tf-Idf calculation for our queries. This results in us having a fast query execution but a loss in accuracy. To mitigate this we calculate a cosine similarity if tf-idf scores are high.
 
 2. contact support
