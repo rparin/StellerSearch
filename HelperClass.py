@@ -238,16 +238,17 @@ class QueryParser:
 
         #Calculate whether to do a cosine sim (slow and accurate)
         # or a fast TfIdf Ranking
-        if doCosSim: 
-            self._docIds = self._getDocIds()
-            return self.getCosRank(ignore=ignore)
-
         term = self._queryOrder[0][1]
-        if self._queryCount['len'] == 1 and self._queryDict[term]['idf'] > 0.35:
+        if self._queryCount['len'] == 1:
             self._docIds = self._getCList()
-            return self.getCosRank(ignore=ignore)
+            if self._queryDict[term]['idf'] > 1:
+                return self.getCosRank(ignore=ignore)
+            else:
+                return self.getTf_IdfRank(ignore=ignore)
         else:
             self._docIds = self._getDocIds()
+            if doCosSim: 
+                return self.getCosRank(ignore=ignore)
         return self.getTf_IdfRank(ignore=ignore)
 
     #Stem query and gather tfidf info for query
@@ -307,7 +308,7 @@ class QueryParser:
         #  documents based on high Cosine Sim score
     def getCosRank(self, amt = 10, ignore:set = set()) -> list:
         #Get X amount of TfIdf ranked documents
-        tfIdf_doc_amt = min(len(self._docIds), 15)
+        tfIdf_doc_amt = min(len(self._docIds), 12)
         docRanks = self.getTf_IdfRank(tfIdf_doc_amt, False, ignore=ignore)
 
         #Calculate query vector, vector of query tfIdf
