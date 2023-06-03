@@ -1,0 +1,92 @@
+Format:
+#. Query string
+    R: Reason for testing query
+    C\E: Comment or explanation on how we improved our results or didn't need to
+
+1. ics majors
+    R: 
+    C\E: 
+
+2. contact support
+    R:
+    C\E: 
+
+3. stdent clubbs
+    R:
+    C\E: 
+
+4. best informatics profs
+    R:
+    C\E: 
+
+5. workshops
+    R:
+    C\E: 
+
+6. ics
+    R:
+    C\E: 
+
+7. research
+    R:
+    C\E: 
+
+8. ai
+    R:
+    C\E: 
+
+9. pdf
+    R:
+    C\E: 
+
+10. how to enroll
+    R:
+    C\E: 
+
+11. find all ics professors with a phd
+    R:
+    C\E: 
+
+12. what hack uci events happened between 2018 and 2021?
+    R:
+    C\E: 
+
+13. And, or, a, she, can
+    R:
+    C\E: 
+
+14. master of computer science
+    R:
+    C\E: 
+
+15. wics club events
+    R:
+    C\E: 
+
+16. hackathon
+    R:
+    C\E: 
+
+17. chen li
+    R:
+    C\E: 
+
+18. ics course restrictions
+    R:
+    C\E: 
+    
+19. statistics department faculty
+    R:
+    C\E: 
+    
+20. honors program
+    R:
+    C\E: 
+    
+21. ics course tutors
+    R:
+    C\E: 
+    
+22. undergraduate advising
+    R:
+    C\E: 

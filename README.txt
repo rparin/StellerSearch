@@ -2,7 +2,7 @@
 
 Before running the indexer make sure to have these packages installed.
 ```
-pip install lxml, pandas, pyarrow, PorterStemmer
+pip install lxml, pandas, pyarrow, PorterStemmer, pyspellchecker
 ```
 
 ## Creating partial Indexes
