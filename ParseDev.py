@@ -5,23 +5,29 @@ import shelve
 from HelperClass import InvertedIndex
 from helper import tokenizeHtml
 
+#Save doc information to txt file
+#Called every time doc parsed
 def writeDoc(docId:str, url:str, docLen:int):
     docJson = json.dumps({'url': url, 'docLen':docLen})
     docFile = open("docId.txt", "a")
     docFile.write(f'{docId}>{docJson}\n')
     docFile.close()
 
+#Store number of documents parsed to shelve file
+#Called once at the end to see if index write complete
 def getDocNum():
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
         if 'totalDoc' not in shelf:
             shelf['totalDoc'] = 0
         return int(shelf['totalDoc'])
     
+#Grab number of documents parsed
+#Called every time index writes to a file
 def storeDocNum(totalDoc:int):
     with shelve.open(f'DevShelve/Url', 'c') as shelf:
         shelf['totalDoc'] = totalDoc
         
-# Opening JSON file
+# Opening JSON file using encoding in JSON file
 def getJsonData(filePath):
     jFile = open(filePath)
     data = json.load(jFile)
@@ -35,6 +41,7 @@ def getJsonData(filePath):
     htmlContent = data['content']
     return (url, htmlContent)
 
+#Before opening json file check if there's enough memory to hold json data
 def isValidJsonSize(file):
     fileSize = os.path.getsize(file)/(1024*1024*1024)
     ramUsedGb = psutil.virtual_memory()[3]/1000000000
@@ -43,18 +50,21 @@ def isValidJsonSize(file):
         return False
     return True
 
+#Set threshold of 70% ram capacity, write to file once threshold reached
 def isMemoryFull(limit=70):
     if psutil.virtual_memory()[2] >= limit:
        print(psutil.virtual_memory()[2])
        return True
     return False
 
+#Write inverted index to file and clear index
 def writeData(invIndex, docId, count):
     invIndex.write('DevShelve', count)
     invIndex.clear()
     storeDocNum(docId)
     print("----Wrote Data to File----")
 
+#Get all json files in dev folder
 def getJsonFiles(rootDir):
     jsonFiles = []
     for root, dirs, files in os.walk(rootDir):
@@ -64,6 +74,7 @@ def getJsonFiles(rootDir):
                 jsonFiles.append(full_path)
     return jsonFiles
 
+# Go through all json files and create partial inverted Index
 def main() -> None:
     rootDir = 'D:/RJ/UCI/Ralph School/2023 Spring/CS 121/Assignments/.vscode/Res/DEV'
     jsonFiles = getJsonFiles(rootDir)
@@ -94,6 +105,8 @@ def main() -> None:
                 try:
                     url, htmlContent = getJsonData(jFile)
                 except:
+                    #Dont parse html if error
+                    #Log the invalid json file
                     docFile = open("HTMLContentErr.txt", "a")
                     docFile.write(f'{jFile}\n')
                     docFile.close()
@@ -107,6 +120,7 @@ def main() -> None:
                     writeDoc(docId, url, docLen)
                     print(docId, url)
                     
+                    #Write partial index to file if memory threshold reached
                     if isMemoryFull():
                         writeData(invIndex, docId, count)
                         count += 1
@@ -114,7 +128,8 @@ def main() -> None:
                         invIndex = InvertedIndex() 
 
                     docId += 1
-
+                    
+    #After parsing all documents check if write to file is needed
     if docId != getDocNum():
         writeData(invIndex, docId, count)
         count += 1
