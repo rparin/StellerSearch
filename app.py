@@ -1,9 +1,8 @@
-from flask import Flask, request, render_template, session, jsonify
+from flask import Flask, request, render_template, session
 from flask_session import Session
 from HelperClass import QueryParser
 import openai
 import time
-import sys
 
 # Citation: https://www.geeksforgeeks.org/how-to-use-flask-session-in-python-flask/#
 app = Flask(__name__)
