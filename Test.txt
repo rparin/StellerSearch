@@ -36,9 +36,9 @@ Format:
     C\E: This query implies that the user is searching for instructions on a task, and thus the query is context-based. This makes it difficult to find the most accurate results. There are many pages containing one or more of the query’s words, which can both slow down the search process and bring up inaccurate results. We sought to provide pages containing most to all of the words, and those in which they occurred frequently. Initially, we only did tf-idf calculations. This allowed for a faster speed but a loss in accuracy. To fix this, we calculate a cosine similarity when the tf-idf scores are high.
 
 
-11. find all ics professors with a phd
-    R: test a query better suited for relational databases
-    C\E: 
+11. Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch's
+    R: long, single word
+    C\E: When a user searches for a long word, the search engine takes a while to process it and find results that match it. Unfortunately, we were not able to find a way to fix this problem. We even compared it to Google and they also take more than 300ms to calculate and find results for the query.
 
 12. what hack uci events happened between 2018 and 2021?
     R: test a query better suited for relational databases
