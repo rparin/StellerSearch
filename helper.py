@@ -14,6 +14,8 @@ def decode_html(html_string):
         return html_string
     return converted.unicode_markup
 
+#Clean html by removing client scripts, comments, style tags and other misc tags
+# While cleaning html attempt to decode it to a proper html encoding
 def cleanHtml(html_content) -> str:
     cleaner = Cleaner(page_structure=False, meta=True, comments=True,style=True, inline_style=True, processing_instructions=True, remove_unknown_tags=True)
     try:
