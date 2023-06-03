@@ -1,12 +1,13 @@
 from html.parser import HTMLParser
 from nltk.stem import PorterStemmer
 from heapq import heapify, heappush, heappop
-import numpy as np
 from numpy.linalg import norm
+from autocorrect import Speller
+import pyarrow.feather as feather
+import numpy as np
 import json
 import math
 import re
-import pyarrow.feather as feather
 
 #This class is a dictionary that defines how much weight a given tag has
 class WeightFlags:
@@ -395,6 +396,7 @@ class QueryParser:
     # to calculate tfIdf and gets a set order to parse query
     def _stemQuery(self, queryStr:str) -> dict:
         stemmer = PorterStemmer() #Object to stem query term
+        spellCheck = Speller(lang='en')
 
         #Do a cosine similarity rank if terms have high idf
         doCosineSim = True
@@ -411,7 +413,7 @@ class QueryParser:
             for aToken in re.split('[^a-z0-9]', line.lower()):
                 if (aToken != ''):
                     #Stem a term
-                    token = stemmer.stem(aToken)
+                    token = stemmer.stem(spellCheck(aToken))
 
                     #Check if term valid
                         #Store term if not already stored

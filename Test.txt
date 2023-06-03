@@ -9,7 +9,7 @@ Format:
 
 2. contact support
     R: unknown what resource user is specifically searching for
-    C\E: 
+    C\E: We didn't use weights at first but later we did which would be helpful for queries like this. When a user searches for a vague query, the weight of different html tags play a vital role in displaying the most relevant information
 
 3. stdent clubbs
     R: misspelling
@@ -19,25 +19,17 @@ Format:
     R: subjective (“best”) and abbreviated query (“professors”)
     C\E: 
 
-5. workshops
-    R: short/non-specific query
-    C\E: 
+5. And, or, a, she, can
+    R: See how our query handles words that show up in a lot of documents
+    C\E: We at first didn't use a champion list therefore stop words like and too a fairly long time to load. To fix this we check if a term has a low idf if so we use a champion list.
 
 6. ics
-    R: broad topic with potentially many results
-    C\E: 
-
 7. research
-    R: broad and short/non-specific query
-    C\E: 
-
 8. ai
+    R: broad topic with potentially many results
+    R: broad and short/non-specific query
     R: short and abbreviated query (“artificial intelligence”)
-    C\E: 
-
-9. pdf
-    R: broad and searching specifically for websites containing pdf’s
-    C\E: 
+    C\E: Even with many possible results, the time it takes to search for the query is < 300 ms. This is because for single term queries we use a champion list. We look at a predefined set vs a undefined large set
 
 10. how to enroll
     R: broad and searching for instructions
@@ -49,44 +41,4 @@ Format:
 
 12. what hack uci events happened between 2018 and 2021?
     R: test a query better suited for relational databases
-    C\E: 
-
-13. And, or, a, she, can
-    R: See how our query handles words that show up in a lot of documents
-    C\E: 
-
-14. master of computer science
-    R:
-    C\E: 
-
-15. wics club events
-    R:
-    C\E: 
-
-16. hackathon
-    R:
-    C\E: 
-
-17. chen li
-    R:
-    C\E: 
-
-18. ics course restrictions
-    R:
-    C\E: 
-    
-19. statistics department faculty
-    R:
-    C\E: 
-    
-20. honors program
-    R:
-    C\E: 
-    
-21. ics course tutors
-    R:
-    C\E: 
-    
-22. undergraduate advising
-    R:
     C\E: 
