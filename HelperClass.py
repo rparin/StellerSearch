@@ -230,13 +230,17 @@ class QueryParser:
     # If the word has a low tfIdf we do not do cosine sim
     def runQuery(self, queryStr:str, ignore:set = set()) -> list:
         #Stem the query
-        self.setQuery(queryStr)
+        doCosSim = self.setQuery(queryStr)
 
         #Check if the query is valid
         if self._queryCount['len'] < 1: return []
 
         #Calculate whether to do a cosine sim (slow and accurate)
         # or a fast TfIdf Ranking
+        if doCosSim: 
+            self._docIds = self._getDocIds()
+            return self.getCosRank(ignore=ignore)
+
         term = self._queryOrder[0][1]
         if self._queryCount['len'] == 1 and self._queryDict[term]['idf'] > 0.35:
             self._docIds = self._getCList()
@@ -248,7 +252,8 @@ class QueryParser:
     #Stem query and gather tfidf info for query
     def setQuery(self, queryStr) -> None:
         self._queryCount:dict = {'terms':{}, 'len': 0}
-        self._queryDict, self._queryOrder = self._stemQuery(queryStr)
+        toCosSim, self._queryOrder = self._stemQuery(queryStr)
+        return toCosSim
         
     # Get top 10 TFIDf documents for a given query
     # Ignore set is an option to not rank documents in that set
@@ -391,8 +396,11 @@ class QueryParser:
     def _stemQuery(self, queryStr:str) -> dict:
         stemmer = PorterStemmer() #Object to stem query term
 
+        #Do a cosine similarity rank if terms have high idf
+        doCosineSim = True
+
         #Hold query Data {'idf': float, 'docId': tfIdf}
-        queryDict = {}
+        self._queryDict = {}
 
         #Store query order based on highest idf value
         intersectOrder = []; heapify(intersectOrder)
@@ -407,10 +415,13 @@ class QueryParser:
 
                     #Check if term valid
                         #Store term if not already stored
-                    if token not in queryDict:
+                    if token not in self._queryDict:
                         termData = self._getTermData(token)
                         if termData:
-                            queryDict[token] = termData
+                            self._queryDict[token] = termData
+
+                            if termData['idf'] < 2.6:
+                                doCosineSim = False
 
                             #Sort term based on decreasing idf value
                             heappush(intersectOrder, (termData['idf']*-1,token))
@@ -419,7 +430,7 @@ class QueryParser:
                     else:
                         self._queryCount['terms'][token] += 1
                         self._queryCount['len'] += 1               
-        return queryDict, intersectOrder
+        return doCosineSim, intersectOrder
     
     # Get all documents where the query term(s) shows up
     def _getDocIds(self) -> set:

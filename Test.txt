@@ -5,7 +5,7 @@ Format:
 
 1. ics majors
     R: finding a particular website with general word query
-    C\E: 
+    C\E: At first we only did a tfIdf calculation for our queries. This results in us having a fast query execution but a loss in accuracy. To mitigate this we calculate a cosine similarity if tfidf scores are high.
 
 2. contact support
     R: unknown what resource user is specifically searching for
