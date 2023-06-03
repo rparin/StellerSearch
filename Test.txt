@@ -13,11 +13,11 @@ Format:
 
 3. stdent clubbs
     R: misspelling
-    C\E: 
+    C\E: This query started off poorly because our search engine could not handle spelling errors. It would look them up as is. To improve it, we decided to implement autocorrection. After researching different libraries, we found that the fastest and most efficient for our use case is autocorrect (https://pypi.org/project/autocorrect/), which can take in an entire phrase and fix the spelling errors. HOWEVER, we also realized that proper nouns would be ‘corrected’ to other existing words. For example, “Pattis” to “parts.” We decided that correctly spelled accuracy is more important than fixing misspelled accuracy and decided not to implement a spellchecker. 
 
 4. best informatics profs
     R: subjective (“best”) and abbreviated query (“professors”)
-    C\E: 
+    C\E: This query is both abbreviated and non-specific, making it difficult to understand what exactly the user is searching for. This might be considered a misspelling by the search engine, which can cause it to slow down. In this case, the weight of different html tags play a vital role in displaying the most relevant information, which is why we implemented weights as specified in the assignment’s directions. This, combined with the tf-idf calculation and cosine similarity, allows for fast and accurate results. Also, since “best” is subjective to the user and the search engine has not been developed on things such as review sites, it is most efficient to simply provide results on informatics professors in general.
 
 5. And, or, a, she, can
     R: See how our query handles words that show up in a lot of documents
@@ -33,7 +33,8 @@ Format:
 
 10. how to enroll
     R: broad and searching for instructions
-    C\E: 
+    C\E: This query implies that the user is searching for instructions on a task, and thus the query is context-based. This makes it difficult to find the most accurate results. There are many pages containing one or more of the query’s words, which can both slow down the search process and bring up inaccurate results. We sought to provide pages containing most to all of the words, and those in which they occurred frequently. Initially, we only did tf-idf calculations. This allowed for a faster speed but a loss in accuracy. To fix this, we calculate a cosine similarity when the tf-idf scores are high.
+
 
 11. find all ics professors with a phd
     R: test a query better suited for relational databases
@@ -41,4 +42,8 @@ Format:
 
 12. what hack uci events happened between 2018 and 2021?
     R: test a query better suited for relational databases
-    C\E: 
+    C\E: The search engine is unable to give the exact correct desired results. However, this is understandable since the query is better suited for relational databases. Initially, we only did tf-idf calculations. This allowed for a faster speed but a loss in accuracy. To fix this, we calculate a cosine similarity when the tf-idf scores are high.
+
+13. apple orange banana strawberry watermelon pineapple mango peach kiwi grapefruit lemon lime blueberry raspberry blackberry cherry papaya pomegranate 
+    R: long query with different words
+    C\E: When a user searches for a long query with different words, the search engine takes a while to process each individual word. Unfortunately, we were not able to find a way to fix this problem. We even compared it to Google and they also take more than 300ms to calculate and find results for the query. 
