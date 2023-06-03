@@ -30,10 +30,6 @@ Steller Search is a search engine built using the Python programming language an
 - Navigate through multiple results
 - Use of Open AI to display url summary
 
-### Overview
-
-To get started, simply clone the repository and follow the instructions in the section below.
-
 ## Running the Search Engine
 
 ⚠️ **Note:** Before you are able to run the search engine ensure that you have the following packages installed and a valid Open AI key
