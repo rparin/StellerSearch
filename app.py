@@ -13,8 +13,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 #Open api key to get summaries for urls
-openai.api_key = 'YOUR-OPEN-API-Key' #Old Key
-# openai.api_key = 'REMOVED' #Working key
+openai.api_key = "YOUR-OPEN-API-Key"
 
 
 # Citation: https://platform.openai.com/examples/default-tldr-summary
@@ -167,7 +166,7 @@ def prevPage():
 def getSummary():
     url = request.form.get('data')
     return ('Imagine some chat gpt summary')
-    # return summarize_url(url)
+    # return summarize_url(url) #Uncomment this after open api key set
 
 if __name__ == "__main__":
     app.run(debug=True)
