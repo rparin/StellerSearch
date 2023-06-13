@@ -35,7 +35,7 @@ Steller Search is a search engine built using the Python programming language an
 ⚠️ **Note:** Before you are able to run the search engine ensure that you have the following packages installed and a valid Open AI key
 
 ```
-pip install Flask, Flask-Session, lxml, pandas, pyarrow, PorterStemmer, openai, pyspellchecker
+pip install Flask Flask-Session lxml pandas pyarrow PorterStemmer openai
 ```
 
 ### How to run the indexer
