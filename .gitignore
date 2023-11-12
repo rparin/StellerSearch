@@ -170,3 +170,4 @@ cython_debug/
 #.idea/
 DevHDF5/Terms.hdf5
 DevHDF5/TermInfo.hdf5
+Data.zip
