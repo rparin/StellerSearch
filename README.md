@@ -20,7 +20,7 @@ Steller Search is a search engine built using the Python programming language an
 
 <div align="center">
 
-<img height=350 alt="demo of Search Engine" src="https://raw.githubusercontent.com/rparin/StellerSearch/main/preview/Demo.gif">
+<img max-height=350 alt="demo of Search Engine" src="https://raw.githubusercontent.com/rparin/StellerSearch/main/preview/Demo.gif">
 
 </div>
 
